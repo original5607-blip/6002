@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>人生生存試算器 (新青安與分段利率完整版)</title>
+  <title>人生生存試算器 (房貸完整年限與深色完美修復版)</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     /* 深色模式變數 (預設) */
@@ -375,8 +375,8 @@
 
 <div class="container">
   <header>
-    <h1>人生生存試算器 (新青安與分段利率完整版)</h1>
-    <p>全資產即時總覽、房貸分段利率、寬限期、育兒教育支出與雙年金獨立模型</p>
+    <h1>人生生存試算器 (新青安與貸款年限完整版)</h1>
+    <p>全資產即時總覽、房貸分段利率、貸款年限、寬限期、育兒教育支出與雙年金獨立模型</p>
   </header>
 
   <!-- 頂部即時行情大看板 -->
@@ -600,7 +600,7 @@
         <div class="tip-box summary-badge" id="badge_child_total" style="margin-top:8px;">育兒總開銷試算中...</div>
       </div>
 
-      <!-- 居住規劃與房貸分段利率設定 -->
+      <!-- 居住規劃與房貸方案設定 -->
       <div class="section-subtitle">🏠 居住規劃與房貸方案設定</div>
       <div class="housing-box">
         <div class="form-group">
@@ -618,25 +618,25 @@
           <div class="form-group"><label>預計買房年齡</label><input type="number" id="buyAge" value="38" oninput="calculate()"></div>
         </div>
 
-        <!-- 房貸方案、利率與寬限期設定 -->
-        <div class="input-row-3" style="margin-top:8px;">
+        <!-- 房貸方案、利率、寬限期與貸款年限設定 -->
+        <div class="input-row-4" style="margin-top:8px;">
           <div class="form-group">
             <label>適用房貸方案</label>
             <select id="mortgagePlan" onchange="toggleMortgagePlanInputs(); calculate();">
               <option value="general" selected>一般首購 / 商業房貸</option>
-              <option value="nshapo">符合新青安方案 (前5年優惠利率)</option>
+              <option value="nshapo">符合新青安方案</option>
             </select>
           </div>
           <div class="form-group" id="groupRateNormal">
-            <label>自談房貸年利率 (%)</label>
+            <label>房貸年利率 (%)</label>
             <input type="number" id="mortgageRate" value="2.15" step="0.05" oninput="calculate()">
           </div>
           <div class="form-group" id="groupRateNshapo1" style="display:none;">
-            <label>前5年優惠利率 (%)</label>
+            <label>前5年優惠率(%)</label>
             <input type="number" id="nshapoRate1" value="1.775" step="0.005" oninput="calculate()">
           </div>
           <div class="form-group" id="groupRateNshapo2" style="display:none;">
-            <label>第6年起自談利率 (%)</label>
+            <label>第6年起利率(%)</label>
             <input type="number" id="nshapoRate2" value="2.15" step="0.05" oninput="calculate()">
           </div>
           <div class="form-group">
@@ -647,7 +647,16 @@
               <option value="2">2 年寬限期</option>
               <option value="3">3 年寬限期</option>
               <option value="4">4 年寬限期</option>
-              <option value="5">5 年寬限期 (新青安最高)</option>
+              <option value="5">5 年寬限期</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>貸款年限</label>
+            <select id="mortgageYears" onchange="calculate()">
+              <option value="20">20 年期</option>
+              <option value="30" selected>30 年期</option>
+              <option value="35">35 年期</option>
+              <option value="40">40 年期</option>
             </select>
           </div>
         </div>
@@ -1163,12 +1172,12 @@
     inputs.forEach(el => {
       if (el.id) data.fields[el.id] = (el.type === 'checkbox') ? el.checked : el.value;
     });
-    localStorage.setItem('financial_sim_v43_store', JSON.stringify(data));
+    localStorage.setItem('financial_sim_v44_store', JSON.stringify(data));
     showSaveBadge();
   }
 
   function loadFormData() {
-    const saved = localStorage.getItem('financial_sim_v43_store');
+    const saved = localStorage.getItem('financial_sim_v44_store');
     if (!saved) return;
     try {
       const data = JSON.parse(saved);
@@ -1190,7 +1199,7 @@
 
   function resetFormData() {
     if (confirm('確定要清除所有自訂修改，恢復為預設設定嗎？')) {
-      localStorage.removeItem('financial_sim_v43_store');
+      localStorage.removeItem('financial_sim_v44_store');
       location.reload();
     }
   }
@@ -1466,20 +1475,22 @@
     if (mortgagePlan === 'nshapo') {
       rate1 = parseFloat(document.getElementById('nshapoRate1')?.value) || 1.775;
       rate2 = parseFloat(document.getElementById('nshapoRate2')?.value) || 2.15;
-      fixedRateYears = 5; // 新青安前5年優惠
+      fixedRateYears = 5; 
     } else {
       rate1 = parseFloat(document.getElementById('mortgageRate')?.value) || 2.15;
       rate2 = rate1;
     }
 
     const gracePeriodYears = parseInt(document.getElementById('gracePeriod')?.value || 0, 10);
+    const mortgageYears = parseInt(document.getElementById('mortgageYears')?.value || 30, 10);
+
     const selfDownNeeded = Math.max(0, (housePrice * (1 - loanRatio) + housePrice * 0.075) - parentsHelp);
     const loanAmount = housePrice * loanRatio;
     
     const graceMonthlyInterest1 = Math.round(loanAmount * (rate1 / 100) / 12);
     const graceMonthlyInterest2 = Math.round(loanAmount * (rate2 / 100) / 12);
-    const normalMortgagePmt1 = computePMT(rate1, 35, loanAmount);
-    const normalMortgagePmt2 = computePMT(rate2, 35, loanAmount);
+    const normalMortgagePmt1 = computePMT(rate1, mortgageYears, loanAmount);
+    const normalMortgagePmt2 = computePMT(rate2, mortgageYears, loanAmount);
 
     const endAge = 85;
     const totalYears = endAge - startAge;
@@ -1729,14 +1740,14 @@
       if (isBuy) {
         if (currentAge === buyAge) {
           if (gracePeriodYears > 0) {
-            monthlyHouse = (yr < fixedRateYears) ? graceMonthlyInterest1 : graceMonthlyInterest2;
+            monthlyHouse = (yr < 5) ? graceMonthlyInterest1 : graceMonthlyInterest2;
           } else {
-            monthlyHouse = (yr < fixedRateYears) ? normalMortgagePmt1 : normalMortgagePmt2;
+            monthlyHouse = (yr < 5) ? normalMortgagePmt1 : normalMortgagePmt2;
           }
         } else if (currentAge > buyAge) {
           const yearsSinceBuy = currentAge - buyAge;
           const isDuringGrace = (yearsSinceBuy <= gracePeriodYears);
-          const isDuringNshapoFixed = (yr < fixedRateYears);
+          const isDuringNshapoFixed = (yr < 5);
 
           if (isDuringGrace) {
             monthlyHouse = isDuringNshapoFixed ? graceMonthlyInterest1 : graceMonthlyInterest2;
@@ -1803,8 +1814,8 @@
       if (isBuy) {
         let usdtMsg = usdtUsedForHouse > 0 ? `<br>💡 <strong>跨資產調度成功</strong>：動用 USDT 換匯 <strong>NT$ ${formatMoney(usdtUsedForHouse)} 元</strong> 代墊自備款，<strong>完全未動用台股持股！</strong>` : '';
         const currentMortgageDisplay = (gracePeriodYears > 0) 
-          ? `前 ${gracePeriodYears} 年寬限期約 NT$ ${formatMoney(graceMonthlyInterest1)}/月，之後本息約 NT$ ${formatMoney(normalMortgagePmt2)}/月` 
-          : `前 5 年優惠本息約 NT$ ${formatMoney(normalMortgagePmt1)}/月，之後約 NT$ ${formatMoney(normalMortgagePmt2)}/月`;
+          ? `前 ${gracePeriodYears} 年寬限期約 NT$ ${formatMoney(graceMonthlyInterest1)}/月，之後本息約 NT$ ${formatMoney(normalMortgagePmt2)}/月 (${mortgageYears}年期)` 
+          : `前 5 年優惠本息約 NT$ ${formatMoney(normalMortgagePmt1)}/月，之後約 NT$ ${formatMoney(normalMortgagePmt2)}/月 (${mortgageYears}年期)`;
         tipEl.innerHTML = `<strong>✅ 買房規劃分析 (${buyAge} 歲買房)：</strong>自備款需 NT$ ${formatMoney(selfDownNeeded)} 元。${usdtMsg}<br>房貸：${currentMortgageDisplay}。`;
       } else {
         tipEl.innerHTML = `<strong>居住策略：全程租屋</strong>，資金全數留存於台股 ETF 與加密貨幣複利投資中。`;
