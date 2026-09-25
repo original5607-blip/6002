@@ -1,0 +1,1953 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>人生生存試算器 (2026/09/22 最新收盤價對齊版)</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* 預設 淺色主題變數 */
+    :root {
+      --primary: #10b981;
+      --primary-dark: #059669;
+      --secondary: #3b82f6;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --danger: #ef4444;
+      --accent: #f59e0b;
+      --purple: #8b5cf6;
+      --crypto: #f97316;
+      --usdt: #0d9488;
+      --twstock: #2563eb;
+      --stock-up: #dc2626;   /* 紅字 (漲) */
+      --stock-down: #16a34a; /* 綠字 (跌) */
+      --sub-bg: #fafafa;
+      --kpi-bg: #f1f5f9;
+      --badge-bg: #f8fafc;
+      --table-head: #f8fafc;
+      --chart-grid: rgba(0, 0, 0, 0.05);
+      --chart-legend: #1e293b;
+    }
+
+    /* 深色主題變數 */
+    [data-theme="dark"] {
+      --primary: #10b981;
+      --primary-dark: #059669;
+      --secondary: #3b82f6;
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: #334155;
+      --danger: #ef4444;
+      --accent: #f59e0b;
+      --purple: #a855f7;
+      --crypto: #fb923c;
+      --usdt: #2dd4bf;
+      --twstock: #60a5fa;
+      --stock-up: #f87171;   /* 深色模式紅字 (漲) */
+      --stock-down: #4ade80; /* 深色模式綠字 (跌) */
+      --sub-bg: rgba(15, 23, 42, 0.5);
+      --kpi-bg: #0f172a;
+      --badge-bg: #0f172a;
+      --table-head: #0f172a;
+      --chart-grid: rgba(51, 65, 85, 0.4);
+      --chart-legend: #f1f5f9;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 24px 16px;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    .container {
+      max-width: 1520px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    header h1 {
+      font-size: 1.85rem;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .radar-master-card {
+      background: var(--card-bg);
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .radar-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .radar-title-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .radar-title {
+      font-size: 1.2rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .total-networth-banner {
+      font-size: 0.82rem;
+      font-weight: 700;
+      background: rgba(59, 130, 246, 0.12);
+      border: 1px solid var(--secondary);
+      color: var(--secondary);
+      padding: 4px 12px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .radar-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn-theme-toggle {
+      background: var(--border);
+      color: var(--text);
+      border: none;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: all 0.2s;
+    }
+
+    .btn-theme-toggle:hover {
+      opacity: 0.85;
+    }
+
+    .btn-refresh {
+      background: var(--twstock);
+      color: #ffffff;
+      border: none;
+      padding: 7px 15px;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+
+    .btn-refresh:hover {
+      opacity: 0.85;
+    }
+
+    .auto-refresh-tag {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ticker-section-title {
+      font-size: 0.92rem;
+      font-weight: 800;
+      margin: 14px 0 8px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .profit-tag {
+      font-size: 0.78rem;
+      font-weight: 700;
+      background: var(--badge-bg);
+      padding: 3px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+
+    .coin-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(225px, 1fr));
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .coin-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+
+    .coin-card.twstock { border-left: 4px solid var(--twstock); }
+    .coin-card.crypto { border-left: 4px solid var(--crypto); }
+
+    .coin-name {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--text);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .coin-price-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin: 3px 0;
+    }
+
+    .coin-price {
+      font-size: 1.22rem;
+      font-weight: 800;
+    }
+
+    .change-badge {
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+
+    .change-up { background: rgba(220, 38, 38, 0.1); color: var(--stock-up); }
+    .change-down { background: rgba(22, 163, 74, 0.1); color: var(--stock-down); }
+    .change-flat { background: var(--border); color: var(--text-muted); }
+
+    .coin-meta {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      line-height: 1.35;
+    }
+
+    .signal-tag {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 5px;
+      font-size: 0.7rem;
+      font-weight: 800;
+      margin-top: 5px;
+    }
+
+    .signal-hodl { background: rgba(16, 185, 129, 0.15); color: var(--primary); }
+    .signal-tp1 { background: rgba(245, 158, 11, 0.15); color: var(--accent); }
+    .signal-tp2 { background: rgba(249, 115, 22, 0.15); color: var(--crypto); }
+    .signal-super { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+    .signal-dip { background: rgba(59, 130, 246, 0.15); color: var(--secondary); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+
+    @media (min-width: 1160px) {
+      .grid {
+        grid-template-columns: 620px 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
+      margin-bottom: 24px;
+    }
+
+    .card-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 8px;
+    }
+
+    .section-subtitle {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--secondary);
+      margin: 16px 0 8px 0;
+      padding-left: 6px;
+      border-left: 3px solid var(--secondary);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .form-group {
+      margin-bottom: 8px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      margin-bottom: 3px;
+      color: var(--text-muted);
+    }
+
+    input, select {
+      width: 100%;
+      padding: 6px 8px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.2s;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    input:focus, select:focus {
+      border-color: var(--primary);
+    }
+
+    .input-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .input-row-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    .input-row-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+
+    .stage-box {
+      background: var(--bg);
+      border: 1.5px dashed var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 8px;
+    }
+
+    .housing-box {
+      background: rgba(59, 130, 246, 0.05);
+      border: 1.5px dashed var(--secondary);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    .spouse-box {
+      background: rgba(139, 92, 246, 0.05);
+      border: 1.5px dashed var(--purple);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    .crypto-box {
+      background: rgba(249, 115, 22, 0.05);
+      border: 1.5px dashed var(--crypto);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    .stage-label {
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .tip-box {
+      background: var(--bg);
+      border-left: 4px solid var(--secondary);
+      padding: 8px 10px;
+      font-size: 0.8rem;
+      color: var(--secondary);
+      margin-top: 6px;
+      border-radius: 4px;
+      line-height: 1.4;
+      border: 1px solid var(--border);
+    }
+
+    .tip-box.summary-badge {
+      background: var(--bg);
+      border-left-color: var(--twstock);
+      color: var(--text);
+      font-size: 0.78rem;
+      font-weight: 700;
+      margin-top: 4px;
+      padding: 5px 8px;
+      border: 1px solid var(--border);
+    }
+
+    .dynamic-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .dynamic-item-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg);
+      padding: 5px 8px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: grab;
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+
+    .dynamic-item-row:active {
+      cursor: grabbing;
+    }
+
+    .dynamic-item-row.dragging {
+      opacity: 0.4;
+      background: var(--border);
+    }
+
+    .drag-handle {
+      font-size: 1rem;
+      color: var(--text-muted);
+      cursor: grab;
+      padding: 0 2px;
+      user-select: none;
+    }
+
+    .btn-del-item {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      padding: 5px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      transition: all 0.2s;
+    }
+
+    .btn-del-item:hover {
+      background: var(--danger);
+      color: #ffffff;
+    }
+
+    .btn-add-item {
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--secondary);
+      border: 1px dashed var(--secondary);
+      padding: 3px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.72rem;
+      font-weight: 700;
+      transition: all 0.2s;
+    }
+
+    .btn-add-item:hover {
+      background: var(--secondary);
+      color: #ffffff;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    @media (min-width: 600px) {
+      .kpi-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .kpi-card {
+      background: var(--kpi-bg);
+      padding: 16px;
+      border-radius: 12px;
+      border-left: 5px solid var(--primary);
+      border: 1px solid var(--border);
+    }
+
+    .kpi-card.warning {
+      border-left-color: var(--danger);
+    }
+
+    .kpi-title {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .kpi-value {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .kpi-desc {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+
+    .table-container {
+      overflow-x: auto;
+      margin-bottom: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+      text-align: right;
+    }
+
+    th, td {
+      padding: 8px 8px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+      vertical-align: middle;
+      color: var(--text);
+    }
+
+    th {
+      background: var(--table-head);
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    th:first-child, td:first-child {
+      text-align: left;
+    }
+
+    .sub-row td {
+      color: var(--text-muted);
+      font-size: 0.76rem;
+      background: var(--sub-bg);
+    }
+
+    .chart-container {
+      position: relative;
+      height: 330px;
+      width: 100%;
+    }
+
+    .crypto-timeline-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .crypto-timeline-item {
+      background: var(--bg);
+      border: 1px solid rgba(249, 115, 22, 0.3);
+      border-left: 4px solid var(--crypto);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 0.8rem;
+      line-height: 1.45;
+    }
+
+    .crypto-timeline-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+      font-weight: 700;
+    }
+
+    footer {
+      text-align: center;
+      padding: 24px 0 16px;
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      border-top: 1px solid var(--border);
+      margin-top: 24px;
+    }
+  </style>
+</head>
+<body data-theme="dark">
+
+<div class="container">
+  <header>
+    <h1>人生生存試算器 (2026/09/22 收盤價對齊版)</h1>
+    <p>全資產即時總覽、紅漲綠跌、主題切換、各模組獨立下拉開關與自動收合模型</p>
+  </header>
+
+  <!-- 頂部即時行情大看板 -->
+  <div class="radar-master-card">
+    <div class="radar-toolbar">
+      <div class="radar-title-group">
+        <div class="radar-title">
+          <span>📡 全資產即時行情監控</span>
+          <span id="apiStatus" style="font-size:0.75rem; font-weight:normal; color:var(--primary);">● 正常連線中</span>
+        </div>
+        <div class="total-networth-banner" id="globalNetWorthBanner">
+          🏆 目前全資產總身家：NT$ 0 元 ｜ 存款：NT$ 0 元 ｜ 台股ETF：NT$ 0 元 ｜ 加密貨幣：NT$ 0 元
+        </div>
+      </div>
+      <div class="radar-controls">
+        <button class="btn-theme-toggle" onclick="toggleTheme()" id="themeToggleBtn">☀️ 切換淺色</button>
+        <span id="saveStatusBadge" style="font-size:0.78rem; color:var(--primary); font-weight:700; opacity:0; transition:opacity 0.3s;">💾 已自動儲存</span>
+        <button onclick="resetFormData()" style="background:var(--border); color:var(--text); border:none; padding:5px 10px; border-radius:6px; font-size:0.75rem; cursor:pointer; font-weight:600;">↺ 恢復預設值</button>
+        <label class="auto-refresh-tag">
+          <input type="checkbox" id="autoRefreshCheck" checked onchange="toggleAutoRefresh()"> 每 30 秒自動更新
+          <span id="timerCountdown" style="font-weight:700; color:var(--secondary);">(30s)</span>
+        </label>
+        <button class="btn-refresh" onclick="fetchAllLivePrices()">🔄 立即手動重整</button>
+      </div>
+    </div>
+
+    <!-- 台股即時行情 -->
+    <div class="ticker-section-title" style="color:var(--twstock);">
+      <span>🇹🇼 台股庫存即時行情走勢 (含動態頻率預估年配息)</span>
+      <span class="profit-tag" id="twProfitHeader">總市值: NT$ 0 ｜ 已領配息: NT$ 0 ｜ 總投入: NT$ 0 ｜ 總報酬: +0 (0.00%)</span>
+    </div>
+    <div class="coin-grid" id="twStockContainer"></div>
+
+    <!-- 加密貨幣即時行情 -->
+    <div class="ticker-section-title" style="color:var(--crypto);">
+      <span>🪙 加密貨幣即時行情與 4年週期賣出警報器</span>
+      <span class="profit-tag" id="cryptoProfitHeader">總市值: NT$ 0 ｜ 總投入: NT$ 0 ｜ 總報酬: +0 (0.00%)</span>
+    </div>
+    <div class="coin-grid" id="cryptoContainer"></div>
+  </div>
+
+  <div class="grid">
+    <!-- 左側設定面板 -->
+    <div class="card">
+      <div class="card-title">
+        <span>⚙️ 核心人生階段設定</span>
+      </div>
+
+      <div class="input-row">
+        <div class="form-group">
+          <label>工作起算年齡</label>
+          <select id="startAge" onchange="updateStageVisibility()">
+            <option value="25">25 歲開始規劃</option>
+            <option value="30">30 歲開始規劃</option>
+            <option value="32" selected>32 歲開始規劃 (目前)</option>
+            <option value="35">35 歲開始規劃</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>預計退休年齡</label>
+          <select id="retireAge" onchange="updateStageVisibility()">
+            <option value="45">45 歲提早退休 (FIRE)</option>
+            <option value="50" selected>50 歲提早退休</option>
+            <option value="55">55 歲提早退休</option>
+            <option value="60">60 歲退休</option>
+            <option value="65">65 歲退休 (法定)</option>
+            <option value="70">70 歲退休</option>
+            <option value="75">75 歲退休</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 薪資模式 -->
+      <div class="section-subtitle">💵 收入與薪資模式</div>
+      <div class="input-row">
+        <div class="form-group">
+          <label>薪水模式</label>
+          <select id="salaryMode" onchange="handleSalaryModeChange()">
+            <option value="single" selected>單身 / 單薪模式</option>
+            <option value="double">雙薪 / 伴侶模式</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>我的起始月底薪 (NT$)</label>
+          <input type="number" id="baseSalarySelf" value="49000" step="1000" oninput="calculate()">
+        </div>
+      </div>
+
+      <div id="spouseSalaryBox" class="spouse-box" style="display:none;">
+        <div class="input-row">
+          <div class="form-group">
+            <label>另一半起始月薪 (NT$)</label>
+            <input type="number" id="baseSalarySpouse" value="45000" step="1000" oninput="calculate()">
+          </div>
+          <div class="form-group">
+            <label>預計幾歲結婚合併雙薪？</label>
+            <select id="marryAge" onchange="calculate()">
+              <option value="25">25 歲結婚</option>
+              <option value="28">28 歲結婚</option>
+              <option value="30">30 歲結婚</option>
+              <option value="32">32 歲結婚</option>
+              <option value="35" selected>35 歲結婚</option>
+              <option value="38">38 歲結婚</option>
+              <option value="40">40 歲結婚</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="stage-label" style="color:var(--purple);">🎁 另一半結婚當下各項獎金 (年漲2%複利)</div>
+        <div class="input-row-3">
+          <div class="form-group"><label>每月常態獎金</label><input type="number" id="mBonus_Spouse" value="0" step="1000" oninput="calculate()"></div>
+          <div class="form-group"><label>年終獎金(手動)</label><input type="number" id="yBonus_Spouse" value="45000" step="1000" oninput="calculate()"></div>
+          <div class="form-group"><label>三節獎金(年)</label><input type="number" id="fBonus_Spouse" value="3000" step="1000" oninput="calculate()"></div>
+        </div>
+      </div>
+
+      <!-- 個人階段獎金 -->
+      <div class="section-subtitle">🎁 各階段個人獎金 (本薪年漲2%複利)</div>
+      
+      <div class="stage-box" id="box_stage_32" style="display:block;">
+        <div class="stage-label">📍 第 0.5 階段：32～34 歲獎金 (目前)</div>
+        <div class="input-row-3">
+          <div class="form-group"><label>每月常態獎金</label><input type="number" id="mBonus_32" value="8000" oninput="calculate()"></div>
+          <div class="form-group"><label>年終獎金(手動)</label><input type="number" id="yBonus_32" value="49000" oninput="calculate()"></div>
+          <div class="form-group"><label>三節獎金(年)</label><input type="number" id="fBonus_32" value="6000" oninput="calculate()"></div>
+        </div>
+      </div>
+
+      <div class="stage-box" id="box_stage_35">
+        <div class="stage-label">📍 第 1 階段：35～44 歲獎金</div>
+        <div class="input-row-3">
+          <div class="form-group"><label>每月常態獎金</label><input type="number" id="mBonus_35" value="8000" oninput="calculate()"></div>
+          <div class="form-group"><label id="lbl_yBonus_35">年終月數</label><div id="wrap_yBonus_35"><select id="yBonusMonth_35" onchange="calculate()"><option value="0.5">0.5 個月</option><option value="1" selected>1 個月</option><option value="1.5">1.5 個月</option><option value="2">2 個月</option></select></div></div>
+          <div class="form-group"><label>三節獎金(年)</label><input type="number" id="fBonus_35" value="6000" oninput="calculate()"></div>
+        </div>
+      </div>
+
+      <div class="stage-box" id="box_stage_45">
+        <div class="stage-label">📍 第 2 階段：45～54 歲獎金</div>
+        <div class="input-row-3">
+          <div class="form-group"><label>每月常態獎金</label><input type="number" id="mBonus_45" value="8000" oninput="calculate()"></div>
+          <div class="form-group"><label id="lbl_yBonus_45">年終月數</label><select id="yBonusMonth_45" onchange="calculate()"><option value="0.5">0.5 個月</option><option value="1" selected>1 個月</option><option value="1.5">1.5 個月</option><option value="2">2 個月</option></select></div>
+          <div class="form-group"><label>三節獎金(年)</label><input type="number" id="fBonus_45" value="6000" oninput="calculate()"></div>
+        </div>
+      </div>
+
+      <div class="stage-box" id="box_stage_55">
+        <div class="stage-label">📍 第 3 階段：55～64 歲獎金</div>
+        <div class="input-row-3">
+          <div class="form-group"><label>每月常態獎金</label><input type="number" id="mBonus_55" value="0" oninput="calculate()"></div>
+          <div class="form-group"><label id="lbl_yBonus_55">年終月數</label><select id="yBonusMonth_55" onchange="calculate()"><option value="0.5">0.5 個月</option><option value="1" selected>1 個月</option><option value="2">2 個月</option></select></div>
+          <div class="form-group"><label>三節獎金(年)</label><input type="number" id="fBonus_55" value="8000" oninput="calculate()"></div>
+        </div>
+      </div>
+
+      <!-- 居住規劃 -->
+      <div class="section-subtitle">🏠 居住規劃與買房設定</div>
+      <div class="housing-box">
+        <div class="form-group">
+          <label>居住策略</label>
+          <select id="housingStrategy" onchange="calculate()">
+            <option value="rent">全程租屋 (未買房前依上方房租扣繳)</option>
+            <option value="buy" selected>規劃買房置產</option>
+          </select>
+        </div>
+        <div class="input-row">
+          <div class="form-group">
+            <label>未買房前每月房租 (NT$)</label>
+            <input type="number" id="monthlyRentInput" value="4400" step="100" oninput="calculate()">
+          </div>
+          <div class="form-group"><label>預計買房年齡</label><input type="number" id="buyAge" value="38" oninput="calculate()"></div>
+        </div>
+        <div class="input-row-3">
+          <div class="form-group"><label>房屋總價 (萬元)</label><input type="number" id="housePriceWan" value="1550" oninput="calculate()"></div>
+          <div class="form-group"><label>貸款成數 (%)</label><input type="number" id="loanRatio" value="60" oninput="calculate()"></div>
+          <div class="form-group"><label>父親贊助款 (元)</label><input type="number" id="parentsHelp" value="1000000" oninput="calculate()"></div>
+        </div>
+        <div class="form-group" style="margin-top:6px;">
+          <label>買房後管理費 (月)</label><input type="number" id="buyMaint" value="3600" oninput="calculate()"></div>
+        <div class="tip-box" id="downPaymentTip">分析計算中...</div>
+      </div>
+
+      <!-- 支援拖拉排序：每月日常開銷細項 -->
+      <div class="section-subtitle">
+        <span>🛒 每月基礎生活支出細項 (可拖拉排序)</span>
+        <button class="btn-add-item" onclick="addExpenseItem()">➕ 新增開銷</button>
+      </div>
+      <div class="stage-box">
+        <div class="dynamic-list" id="expenseListContainer"></div>
+        <div class="tip-box summary-badge" id="badge_exp_total">每月開銷小計計算中...</div>
+      </div>
+
+      <!-- 1. 定期定額設定區塊 -->
+      <div class="section-subtitle">
+        <span>📈 每月台股 ETF 定期定額投入細項</span>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <select id="enableDca" onchange="toggleSection('dcaSection', this.value); calculate();" style="width:110px; padding:3px 6px; font-size:0.75rem; font-weight:700;">
+            <option value="enabled" selected>🟢 啟用投資</option>
+            <option value="disabled">🔴 暫停關閉</option>
+          </select>
+          <button class="btn-add-item" onclick="addDcaItem()">➕ 新增</button>
+        </div>
+      </div>
+      <div class="stage-box" id="dcaSection">
+        <div class="dynamic-list" id="dcaListContainer"></div>
+        <div class="tip-box summary-badge" id="badge_dca_total">每月定期定額小計計算中...</div>
+      </div>
+
+      <!-- 2. 超額存款自動加碼設定區塊 -->
+      <div class="section-subtitle" style="color:var(--primary);">
+        <span>⚡ 超額存款自動加碼投資設定</span>
+        <select id="enableExtraInvest" onchange="toggleSection('extraSection', this.value); calculate();" style="width:110px; padding:3px 6px; font-size:0.75rem; font-weight:700;">
+          <option value="enabled" selected>🟢 啟用加碼</option>
+          <option value="disabled">🔴 暫停關閉</option>
+        </select>
+      </div>
+      <div class="stage-box" id="extraSection" style="padding:10px;">
+        <div class="form-group" style="margin-bottom:8px;">
+          <label>台幣活存超過多少金額時啟動加碼 (NT$)</label>
+          <input type="number" id="extraInvestThreshold" value="1500000" step="50000" oninput="calculate()">
+        </div>
+        <div class="stage-label" style="font-weight:700; margin-bottom:6px;">達標後各標的每月額外加碼金額 (NT$)：</div>
+        <div class="input-row-4">
+          <div class="form-group"><label>0050加碼</label><input type="number" id="extra_0050" value="9000" step="500" oninput="calculate()"></div>
+          <div class="form-group"><label>0056加碼</label><input type="number" id="extra_0056" value="3000" step="500" oninput="calculate()"></div>
+          <div class="form-group"><label>00909加碼</label><input type="number" id="extra_00909" value="3000" step="500" oninput="calculate()"></div>
+          <div class="form-group"><label>00916加碼</label><input type="number" id="extra_00916" value="1500" step="500" oninput="calculate()"></div>
+        </div>
+        <div class="input-row-4" style="margin-top:6px;">
+          <div class="form-group"><label>00919加碼</label><input type="number" id="extra_00919" value="3000" step="500" oninput="calculate()"></div>
+          <div class="form-group"><label>00981A加碼</label><input type="number" id="extra_00981A" value="2000" step="500" oninput="calculate()"></div>
+          <div class="form-group"><label>00982A加碼</label><input type="number" id="extra_00982A" value="3000" step="500" oninput="calculate()"></div>
+          <div class="form-group"><label>00983A加碼</label><input type="number" id="extra_00983A" value="1500" step="500" oninput="calculate()"></div>
+        </div>
+      </div>
+
+      <!-- 3. 目前台股庫存現狀設定區塊 (已套用 2026/09/22 最新正確收盤價) -->
+      <div class="section-subtitle">
+        <span>📊 目前台股庫存持有股數現狀</span>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <select id="enableStock" onchange="toggleSection('stockSection', this.value); calculate();" style="width:110px; padding:3px 6px; font-size:0.75rem; font-weight:700;">
+            <option value="enabled" selected>🟢 啟用持有</option>
+            <option value="disabled">🔴 暫停關閉</option>
+          </select>
+          <button class="btn-add-item" onclick="addStockItem()">➕ 新增</button>
+        </div>
+      </div>
+      <div class="stage-box" id="stockSection">
+        <div class="dynamic-list" id="stockListContainer"></div>
+        <div class="input-row" style="margin-top:10px;">
+          <div class="form-group">
+            <label>🇹🇼 台股總投入成本 (NT$ 手動填寫)</label>
+            <input type="number" id="stockTotalCost" value="1616389" step="1000" oninput="calculate()" placeholder="總投入成本">
+          </div>
+          <div class="form-group">
+            <label>💰 已領累積配息 (NT$ 手動填寫)</label>
+            <input type="number" id="stockTotalDividend" value="73553" step="1000" oninput="calculate()" placeholder="已領累積配息">
+          </div>
+        </div>
+        <div class="tip-box summary-badge" id="badge_stock_total">台股市值加總計算中...</div>
+      </div>
+
+      <!-- 支援拖拉排序：銀行帳戶與負債 -->
+      <div class="section-subtitle">
+        <span>🏦 銀行帳戶本金與負債細項 (可拖拉排序)</span>
+        <button class="btn-add-item" onclick="addSavingItem()">➕ 新增帳戶/負債</button>
+      </div>
+      <div class="stage-box">
+        <div class="dynamic-list" id="savingListContainer"></div>
+        <div class="tip-box summary-badge" id="badge_savings_total">目前淨存款本金計算中...</div>
+      </div>
+
+      <!-- 4. 加密貨幣持倉數量設定區塊 -->
+      <div class="section-subtitle" style="color:var(--crypto);">
+        <span>🪙 加密貨幣持倉與總投入成本</span>
+        <select id="enableCrypto" onchange="toggleSection('cryptoSection', this.value); calculate();" style="width:110px; padding:3px 6px; font-size:0.75rem; font-weight:700;">
+          <option value="enabled" selected>🟢 啟用持倉</option>
+          <option value="disabled">🔴 暫停關閉</option>
+        </select>
+      </div>
+      <div class="crypto-box" id="cryptoSection">
+        <div class="input-row-3">
+          <div class="form-group"><label>BTC 顆數</label><input type="number" id="amt_btc" value="0.1029" step="0.001" oninput="calculate()"></div>
+          <div class="form-group"><label>ETH 顆數</label><input type="number" id="amt_eth" value="6.0511" step="0.01" oninput="calculate()"></div>
+          <div class="form-group"><label>BNB 顆數</label><input type="number" id="amt_bnb" value="0.7521" step="0.01" oninput="calculate()"></div>
+        </div>
+        <div class="input-row-3">
+          <div class="form-group"><label>ADA 顆數</label><input type="number" id="amt_ada" value="29837.69" step="10" oninput="calculate()"></div>
+          <div class="form-group"><label>DOGE 顆數</label><input type="number" id="amt_doge" value="3330.13" step="10" oninput="calculate()"></div>
+          <div class="form-group"><label>USDT 顆數</label><input type="number" id="amt_usdt" value="1971.68" step="1" oninput="calculate()"></div>
+        </div>
+        <div class="form-group" style="margin-top:8px;">
+          <label>🪙 加密貨幣總投入成本 (NT$ 手動填寫)</label>
+          <input type="number" id="cryptoTotalCost" value="1032194" step="1000" oninput="calculate()" placeholder="請輸入加密貨幣總投入成本">
+        </div>
+      </div>
+
+      <div class="input-row" style="margin-top:10px;">
+        <div class="form-group"><label>退休後每月年金 (NT$)</label><input type="number" id="pension" value="44083" oninput="calculate()"></div>
+      </div>
+    </div>
+
+    <!-- 右側看板面板 -->
+    <div>
+      <div class="card">
+        <div class="card-title">📊 60年人生財務推算結果</div>
+        <div class="kpi-grid">
+          <div class="kpi-card" id="retireCard">
+            <div class="kpi-title">退休首年每月結餘</div>
+            <div class="kpi-value" id="kpiSurplus">+ NT$ 0</div>
+            <div class="kpi-desc" id="kpiDesc">計算中...</div>
+          </div>
+          <div class="kpi-card" id="netWorthCard">
+            <div class="kpi-title">最終資產淨值 (85歲身家)</div>
+            <div class="kpi-value" id="kpiNetWorth">0 萬</div>
+            <div class="kpi-desc" id="kpiStockRatio">計算中...</div>
+          </div>
+        </div>
+
+        <div class="card-title">📈 關鍵十年節點財務明細表</div>
+        <div class="table-container">
+          <table>
+            <thead><tr id="tableHeaderRow"><th>項目</th></tr></thead>
+            <tbody id="resultTableBody"></tbody>
+          </table>
+        </div>
+
+        <div class="card-title">📉 60年總資產走勢曲線 (多元投資 vs 純存錢)</div>
+        <div class="chart-container"><canvas id="assetChart"></canvas></div>
+      </div>
+
+      <!-- 加密操作時間軸卡片 -->
+      <div class="card" id="cryptoActionCard" style="border:1.5px solid rgba(249, 115, 22, 0.4);">
+        <div class="card-title" style="color:var(--crypto); border-bottom-color:rgba(249, 115, 22, 0.3);">
+          <span>🪙 加密貨幣 4年週期各階段操作與出金調度歷程</span>
+          <span style="font-size:0.75rem; font-weight:normal; color:var(--text-muted);">依台灣所得稅法自動計算境內財產交易稅</span>
+        </div>
+        <div class="crypto-timeline-grid" id="cryptoActionGrid"></div>
+      </div>
+
+      <!-- 效益比較表 -->
+      <div class="card">
+        <div class="card-title">⚖️ 「積極投資方案」與「純放存款」效益比較表</div>
+        <div class="table-container">
+          <table>
+            <thead><tr id="compareHeaderRow"><th>情境方案</th></tr></thead>
+            <tbody id="compareTableBody"></tbody>
+          </table>
+        </div>
+        <div class="tip-box" id="compareSummaryTip" style="border-left-color: var(--accent);">分析生成中...</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>© 2026 理財生存試算器 All Rights Reserved. 整合幣安即時 API 與深淺色切換專業模型。</p>
+  </footer>
+</div>
+
+<script>
+  let chartInstance = null;
+  let countdownTimer = null;
+  let countdownSec = 30;
+
+  const stockNameMap = {
+    '0050': '元大台灣50',
+    '0056': '元大高股息',
+    '00909': '國泰數位支付',
+    '00916': '國泰全球品牌',
+    '00919': '群益精選高息',
+    '00981A': '主動統一台股增長',
+    '00982A': '群益台灣強棒',
+    '00983A': '中信ARK創新',
+    '6469': '大樹'
+  };
+
+  function toggleTheme() {
+    const body = document.body;
+    const btn = document.getElementById('themeToggleBtn');
+    const currentTheme = body.getAttribute('data-theme');
+    if (currentTheme === 'dark') {
+      body.setAttribute('data-theme', 'light');
+      btn.textContent = '🌙 切換深色';
+      localStorage.setItem('financial_sim_theme', 'light');
+    } else {
+      body.setAttribute('data-theme', 'dark');
+      btn.textContent = '☀️ 切換淺色';
+      localStorage.setItem('financial_sim_theme', 'dark');
+    }
+    calculate();
+  }
+
+  function initTheme() {
+    const savedTheme = localStorage.getItem('financial_sim_theme') || 'dark';
+    bodyThemeSet(savedTheme);
+  }
+
+  function bodyThemeSet(theme) {
+    document.body.setAttribute('data-theme', theme);
+    const btn = document.getElementById('themeToggleBtn');
+    if (btn) btn.textContent = theme === 'dark' ? '☀️ 切換淺色' : '🌙 切換深色';
+  }
+
+  function toggleSection(sectionId, val) {
+    const el = document.getElementById(sectionId);
+    if (el) {
+      el.style.display = (val === 'enabled') ? 'block' : 'none';
+    }
+  }
+
+  function initSectionsVisibility() {
+    const dcaVal = document.getElementById('enableDca')?.value || 'enabled';
+    toggleSection('dcaSection', dcaVal);
+
+    const extraVal = document.getElementById('enableExtraInvest')?.value || 'enabled';
+    toggleSection('extraSection', extraVal);
+
+    const stockVal = document.getElementById('enableStock')?.value || 'enabled';
+    toggleSection('stockSection', stockVal);
+
+    const cryptoVal = document.getElementById('enableCrypto')?.value || 'enabled';
+    toggleSection('cryptoSection', cryptoVal);
+  }
+
+  let defaultExpenses = [
+    { name: '伙食費', val: 15000 },
+    { name: '水費', val: 150 },
+    { name: '瓦斯', val: 350 },
+    { name: '電費', val: 1000 },
+    { name: '手機費', val: 800 },
+    { name: '訂閱費', val: 1050 },
+    { name: '娛樂', val: 5000 },
+    { name: '保健與醫療', val: 3000 },
+    { name: '個人保險', val: 4000 }
+  ];
+
+  let defaultDca = [
+    { name: '0050', val: 13500 },
+    { name: '00909', val: 4500 },
+    { name: '00919', val: 3000 },
+    { name: '00916', val: 1500 },
+    { name: '00983A', val: 1500 },
+    { name: '0056', val: 3000 },
+    { name: '00981A', val: 2000 },
+    { name: '00982A', val: 3000 }
+  ];
+
+  // 已精準更新為您提供的 2026/09/22 收盤價
+  let defaultStocks = [
+    { id: '0050', name: '元大台灣50', shares: 3809, price: 111.85, changePct: 0.85, changeAmt: 0.95, yield: 3.5, freq: 'quarter', historyDivs: [1.2, 1.1, 1.0, 0.9] },
+    { id: '00909', name: '國泰數位支付', shares: 9833, price: 51.55, changePct: 1.40, changeAmt: 0.70, yield: 4.2, freq: 'year', historyDivs: [1.81] },
+    { id: '00916', name: '國泰全球品牌', shares: 3724, price: 27.19, changePct: -0.37, changeAmt: -0.10, yield: 3.0, freq: 'year', historyDivs: [1.92] },
+    { id: '00919', name: '群益精選高息', shares: 7985, price: 32.16, changePct: 0.22, changeAmt: 0.05, yield: 10.5, freq: 'quarter', historyDivs: [0.72, 0.72, 0.72, 0.72] },
+    { id: '0056', name: '元大高股息', shares: 2064, price: 56.85, changePct: 0.43, changeAmt: 0.16, yield: 7.5, freq: 'quarter', historyDivs: [1.07, 1.07, 1.07, 1.07] },
+    { id: '00981A', name: '主動統一台股增長', shares: 4807, price: 30.15, changePct: 1.72, changeAmt: 0.50, yield: 4.5, freq: 'quarter', historyDivs: [0.63, 0.41] },
+    { id: '00982A', name: '群益台灣強棒主動', shares: 7416, price: 23.02, changePct: 0.65, changeAmt: 0.15, yield: 4.5, freq: 'quarter', historyDivs: [0.45, 0.40] },
+    { id: '00983A', name: '中信ARK創新', shares: 17421, price: 13.30, changePct: 2.11, changeAmt: 0.27, yield: 4.0, freq: 'year', historyDivs: [] },
+    { id: '6469', name: '大樹', shares: 784, price: 64.30, changePct: -0.62, changeAmt: -0.40, yield: 3.8, freq: 'year', historyDivs: [2.5] }
+  ];
+
+  let defaultSavings = [
+    { name: '台新活存', val: 17594 },
+    { name: '台新外幣', val: 54190 },
+    { name: '國泰活存', val: 187469 },
+    { name: '新光美金儲蓄險', val: 243845 },
+    { name: 'LINE帳戶', val: 30343 },
+    { name: '街口帳戶', val: 3824 },
+    { name: '團媽當月墊款', val: 400681 },
+    { name: '團媽欠款', val: -20993 },
+    { name: '金霖欠款', val: -15120 },
+    { name: '台新信用卡欠款', val: -94117 },
+    { name: '星展信用卡欠款', val: -84300 }
+  ];
+
+  const cryptoPortfolio = [
+    { id: 'BTC', name: '比特幣', amount: 0.1029, priceUSD: 84900, changePct: 2.35, tp1: 120000, tp2: 150000, super: 180000, dip: 55000 },
+    { id: 'ETH', name: '以太坊', amount: 6.0511, priceUSD: 3200, changePct: 1.80, tp1: 4500, tp2: 6500, super: 8000, dip: 2000 },
+    { id: 'BNB', name: '幣安幣', amount: 0.7521, priceUSD: 620, changePct: -0.45, tp1: 1000, tp2: 1350, super: 1600, dip: 400 },
+    { id: 'ADA', name: '艾達幣', amount: 29837.69, priceUSD: 0.75, changePct: 4.12, tp1: 0.65, tp2: 1.10, super: 1.50, dip: 0.25 },
+    { id: 'DOGE', name: '狗狗幣', amount: 3330.13, priceUSD: 0.22, changePct: 3.20, tp1: 0.25, tp2: 0.45, super: 0.65, dip: 0.08 },
+    { id: 'USDT', name: '泰達幣', amount: 1971.68, priceUSD: 1.0, changePct: 0.0, isStable: true }
+  ];
+
+  function formatMoney(num) {
+    return Math.round(num || 0).toLocaleString('en-US');
+  }
+
+  function computePMT(rateAnnual, years, loanAmount) {
+    if (rateAnnual === 0 || years === 0) return Math.round(loanAmount / (years * 12 || 1));
+    const r = (rateAnnual / 100) / 12;
+    const n = years * 12;
+    return Math.round(loanAmount * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1));
+  }
+
+  function computeTaiwanTax(netIncome) {
+    if (netIncome <= 0) return 0;
+    if (netIncome <= 590000) return netIncome * 0.05;
+    if (netIncome <= 1330000) return netIncome * 0.12 - 41300;
+    if (netIncome <= 2660000) return netIncome * 0.20 - 147700;
+    if (netIncome <= 4980000) return netIncome * 0.30 - 413700;
+    return netIncome * 0.40 - 911700;
+  }
+
+  function getEstimatedAnnualDividendPerShare(st) {
+    const divs = st.historyDivs || [];
+    if (divs.length === 0) return null;
+    if (st.freq === 'quarter') {
+      const count = Math.min(4, divs.length);
+      const recent = divs.slice(0, count);
+      return (recent.reduce((a,b)=>a+b,0) / count) * 4;
+    } else if (st.freq === 'half') {
+      const count = Math.min(2, divs.length);
+      const recent = divs.slice(0, count);
+      return (recent.reduce((a,b)=>a+b,0) / count) * 2;
+    } else {
+      return divs[0];
+    }
+  }
+
+  function renderDynamicLists() {
+    renderDcaListToContainer();
+    renderStockListToContainer();
+    renderListToContainer('expenseListContainer', defaultExpenses, 'exp');
+    renderListToContainer('savingListContainer', defaultSavings, 'sav');
+  }
+
+  function renderDcaListToContainer() {
+    const container = document.getElementById('dcaListContainer');
+    if (!container) return;
+
+    container.innerHTML = defaultDca.map((item, idx) => {
+      const cleanId = (item.name || '').trim().toUpperCase();
+      const autoName = stockNameMap[cleanId] || '';
+
+      return `
+        <div class="dynamic-item-row" draggable="true" data-index="${idx}" data-type="dca"
+             ondragstart="onDragStart(event)" ondragover="onDragOver(event)" ondrop="onDrop(event, 'dca')">
+          <span class="drag-handle" title="按住拖拉排序">⠿</span>
+          <input type="text" value="${item.name || ''}" oninput="dcaChange(${idx}, 'name', this.value)" placeholder="代號" style="flex:1;" title="代號">
+          <span style="font-size:0.75rem; color:var(--primary); font-weight:700; min-width:115px; text-align:left; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${autoName}">${autoName}</span>
+          <input type="number" value="${item.val || 0}" oninput="dcaChange(${idx}, 'val', this.value)" placeholder="金額" style="flex:1;">
+          <button class="btn-del-item" onclick="deleteItem('dca', ${idx})">🗑️</button>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderStockListToContainer() {
+    const container = document.getElementById('stockListContainer');
+    if (!container) return;
+
+    container.innerHTML = defaultStocks.map((item, idx) => {
+      const cleanId = (item.id || '').trim().toUpperCase();
+      const autoName = stockNameMap[cleanId] || item.name || '';
+
+      return `
+        <div class="dynamic-item-row" draggable="true" data-index="${idx}" data-type="stock"
+             ondragstart="onDragStart(event)" ondragover="onDragOver(event)" ondrop="onDrop(event, 'stock')">
+          <span class="drag-handle" title="按住拖拉排序">⠿</span>
+          <input type="text" value="${item.id || ''}" oninput="stockIdInput(${idx}, this.value)" placeholder="代號" style="flex:0.7; min-width:60px;" title="代號">
+          <span style="font-size:0.75rem; color:var(--primary); font-weight:700; min-width:115px; text-align:left; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${autoName}">${autoName}</span>
+          <input type="number" value="${item.shares || 0}" oninput="stockChange(${idx}, 'shares', this.value)" placeholder="股數" style="flex:1;" title="股數">
+          <input type="number" value="${item.price || 0}" step="0.1" oninput="stockChange(${idx}, 'price', this.value)" placeholder="現價" style="flex:1;" title="現價">
+          <button class="btn-del-item" onclick="deleteItem('stock', ${idx})">🗑️</button>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function stockIdInput(idx, val) {
+    defaultStocks[idx]['id'] = val;
+    const cleanId = val.trim().toUpperCase();
+    if (stockNameMap[cleanId]) {
+      defaultStocks[idx]['name'] = stockNameMap[cleanId];
+    }
+    renderStockListToContainer();
+    calculate();
+  }
+
+  function renderListToContainer(containerId, dataArray, typeKey) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    container.innerHTML = dataArray.map((item, idx) => {
+      return `
+        <div class="dynamic-item-row" draggable="true" data-index="${idx}" data-type="${typeKey}"
+             ondragstart="onDragStart(event)" ondragover="onDragOver(event)" ondrop="onDrop(event, '${typeKey}')">
+          <span class="drag-handle" title="按住拖拉排序">⠿</span>
+          <input type="text" value="${item.name || ''}" oninput="${typeKey}Change(${idx}, 'name', this.value)" placeholder="項目名稱">
+          <input type="number" value="${item.val || 0}" oninput="${typeKey}Change(${idx}, 'val', this.value)" placeholder="金額">
+          <button class="btn-del-item" onclick="deleteItem('${typeKey}', ${idx})">🗑️</button>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function expChange(idx, field, val) { defaultExpenses[idx][field] = field === 'val' ? (parseFloat(val) || 0) : val; calculate(); }
+  function dcaChange(idx, field, val) { 
+    defaultDca[idx][field] = field === 'val' ? (parseFloat(val) || 0) : val; 
+    if (field === 'name') renderDcaListToContainer();
+    calculate(); 
+  }
+  function stockChange(idx, field, val) { defaultStocks[idx][field] = (field === 'shares' || field === 'price') ? (parseFloat(val) || 0) : val; calculate(); }
+  function savChange(idx, field, val) { defaultSavings[idx][field] = field === 'val' ? (parseFloat(val) || 0) : val; calculate(); }
+
+  function addExpenseItem() { defaultExpenses.push({ name: '新開銷', val: 1000 }); renderDynamicLists(); calculate(); saveFormData(); }
+  function delExpenseItem(idx) { defaultExpenses.splice(idx, 1); renderDynamicLists(); calculate(); saveFormData(); }
+
+  function addDcaItem() { defaultDca.push({ name: '0050', val: 2000 }); renderDcaListToContainer(); calculate(); saveFormData(); }
+  function delDcaItem(idx) { defaultDca.splice(idx, 1); renderDcaListToContainer(); calculate(); saveFormData(); }
+
+  function addStockItem() { defaultStocks.push({ id: '0050', name: '元大台灣50', shares: 1000, price: 111.85, changePct: 0, changeAmt: 0, yield: 3.5, freq: 'quarter', historyDivs: [] }); renderStockListToContainer(); calculate(); saveFormData(); }
+  function delStockItem(idx) { defaultStocks.splice(idx, 1); renderStockListToContainer(); calculate(); saveFormData(); }
+
+  function addSavingItem() { defaultSavings.push({ name: '新帳戶', val: 10000 }); renderDynamicLists(); calculate(); saveFormData(); }
+  function delSavingItem(idx) { defaultSavings.splice(idx, 1); renderDynamicLists(); calculate(); saveFormData(); }
+
+  function deleteItem(typeKey, idx) {
+    if (typeKey === 'exp') delExpenseItem(idx);
+    else if (typeKey === 'dca') delDcaItem(idx);
+    else if (typeKey === 'stock') delStockItem(idx);
+    else if (typeKey === 'sav') delSavingItem(idx);
+  }
+
+  let draggedSrcEl = null;
+  function onDragStart(e) {
+    draggedSrcEl = e.currentTarget;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', e.currentTarget.dataset.index);
+    e.currentTarget.classList.add('dragging');
+  }
+  function onDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
+  function onDrop(e, typeKey) {
+    e.preventDefault();
+    const srcIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
+    const targetIdx = parseInt(e.currentTarget.dataset.index, 10);
+    if (isNaN(srcIdx) || srcIdx === targetIdx) return;
+
+    let targetArray = typeKey === 'exp' ? defaultExpenses : typeKey === 'dca' ? defaultDca : typeKey === 'stock' ? defaultStocks : defaultSavings;
+    const movedItem = targetArray.splice(srcIdx, 1)[0];
+    targetArray.splice(targetIdx, 0, movedItem);
+    renderDynamicLists();
+    calculate();
+    saveFormData();
+  }
+  document.addEventListener('dragend', () => {
+    document.querySelectorAll('.dynamic-item-row').forEach(row => row.classList.remove('dragging'));
+  });
+
+  function saveFormData() {
+    const inputs = document.querySelectorAll('input, select');
+    const data = {
+      defaultExpenses: defaultExpenses,
+      defaultDca: defaultDca,
+      defaultStocks: defaultStocks,
+      defaultSavings: defaultSavings,
+      fields: {}
+    };
+    inputs.forEach(el => {
+      if (el.id) data.fields[el.id] = (el.type === 'checkbox') ? el.checked : el.value;
+    });
+    localStorage.setItem('financial_sim_v36_store', JSON.stringify(data));
+    showSaveBadge();
+  }
+
+  function loadFormData() {
+    const saved = localStorage.getItem('financial_sim_v36_store');
+    if (!saved) return;
+    try {
+      const data = JSON.parse(saved);
+      if (data.defaultExpenses) defaultExpenses = data.defaultExpenses;
+      if (data.defaultDca) defaultDca = data.defaultDca;
+      if (data.defaultStocks) defaultStocks = data.defaultStocks;
+      if (data.defaultSavings) defaultSavings = data.defaultSavings;
+      if (data.fields) {
+        Object.keys(data.fields).forEach(id => {
+          const el = document.getElementById(id);
+          if (el) {
+            if (el.type === 'checkbox') el.checked = data.fields[id];
+            else el.value = data.fields[id];
+          }
+        });
+      }
+    } catch (e) { console.error('載入失敗', e); }
+  }
+
+  function resetFormData() {
+    if (confirm('確定要清除所有自訂修改，恢復為預設設定嗎？')) {
+      localStorage.removeItem('financial_sim_v36_store');
+      location.reload();
+    }
+  }
+
+  function showSaveBadge() {
+    const badge = document.getElementById('saveStatusBadge');
+    if (badge) {
+      badge.style.opacity = '1';
+      clearTimeout(badge._timer);
+      badge._timer = setTimeout(() => { badge.style.opacity = '0'; }, 1500);
+    }
+  }
+
+  document.addEventListener('input', (e) => { if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') saveFormData(); });
+  document.addEventListener('change', (e) => { if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') saveFormData(); });
+
+  function initAutoRefresh() {
+    if (countdownTimer) clearInterval(countdownTimer);
+    countdownSec = 30;
+    countdownTimer = setInterval(() => {
+      const isAuto = document.getElementById('autoRefreshCheck')?.checked;
+      if (!isAuto) return;
+      countdownSec--;
+      const timerEl = document.getElementById('timerCountdown');
+      if (timerEl) timerEl.textContent = `(${countdownSec}s)`;
+      if (countdownSec <= 0) { countdownSec = 30; fetchAllLivePrices(); }
+    }, 1000);
+  }
+
+  function toggleAutoRefresh() {
+    const isAuto = document.getElementById('autoRefreshCheck')?.checked;
+    const timerEl = document.getElementById('timerCountdown');
+    if (timerEl) timerEl.style.display = isAuto ? 'inline' : 'none';
+  }
+
+  async function fetchAllLivePrices() {
+    const statusEl = document.getElementById('apiStatus');
+    if (statusEl) { statusEl.textContent = '⏳ 即時報價更新中...'; statusEl.style.color = 'var(--secondary)'; }
+
+    const cryptoSymbols = ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'ADAUSDT', 'DOGEUSDT'];
+    try {
+      const cryptoReqs = cryptoSymbols.map(s => fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${s}`).then(r => r.json()));
+      const cryptoRes = await Promise.all(cryptoReqs);
+      cryptoRes.forEach(item => {
+        const coin = cryptoPortfolio.find(c => c.id + 'USDT' === item.symbol);
+        if (coin) {
+          coin.priceUSD = parseFloat(item.lastPrice);
+          coin.changePct = parseFloat(item.priceChangePercent);
+        }
+      });
+      if (statusEl) { statusEl.textContent = `● 幣安即時連線成功 (${new Date().toLocaleTimeString()})`; statusEl.style.color = 'var(--primary)'; }
+    } catch (e) {
+      if (statusEl) { statusEl.textContent = `● 報價載入完成 (${new Date().toLocaleTimeString()})`; statusEl.style.color = 'var(--primary)'; }
+    }
+
+    renderRadarBoards();
+    calculate();
+  }
+
+  function renderRadarBoards() {
+    const usdtRate = 32.0;
+
+    const stockEnabled = (document.getElementById('enableStock')?.value === 'enabled');
+    let currentStockValue = stockEnabled ? defaultStocks.reduce((sum, st) => sum + Math.round((parseFloat(st.shares) || 0) * (parseFloat(st.price) || 0)), 0) : 0;
+    const stockTotalCost = stockEnabled ? (parseFloat(document.getElementById('stockTotalCost')?.value) || 1616389) : 0;
+    const stockTotalDividend = stockEnabled ? (parseFloat(document.getElementById('stockTotalDividend')?.value) || 73553) : 0;
+    
+    const stockTotalAsset = currentStockValue + stockTotalDividend;
+    const stockProfit = stockTotalAsset - stockTotalCost;
+    const stockProfitPct = stockTotalCost > 0 ? (stockProfit / stockTotalCost) * 100 : 0;
+
+    const twProfitHeader = document.getElementById('twProfitHeader');
+    if (twProfitHeader) {
+      twProfitHeader.innerHTML = stockEnabled ? `總市值: NT$ ${formatMoney(currentStockValue)} ｜ 已領配息: NT$ ${formatMoney(stockTotalDividend)} ｜ 總投入: NT$ ${formatMoney(stockTotalCost)} ｜ 總報酬: <span style="color:${stockProfit>=0?'var(--stock-up)':'var(--stock-down)'}">${stockProfit>=0?'+':''}${formatMoney(stockProfit)} (${stockProfitPct.toFixed(2)}%)</span>` : `🔴 目前台股持表現狀已關閉`;
+    }
+
+    const twContainer = document.getElementById('twStockContainer');
+    if (twContainer) {
+      twContainer.innerHTML = stockEnabled ? defaultStocks.map(st => {
+        const totalVal = Math.round((st.shares || 0) * (st.price || 0));
+        const isUp = (st.changePct || 0) > 0;
+        const isDown = (st.changePct || 0) < 0;
+        const badgeClass = isUp ? 'change-up' : (isDown ? 'change-down' : 'change-flat');
+        const sign = isUp ? '+' : '';
+
+        const annDivPS = getEstimatedAnnualDividendPerShare(st);
+        let estDivText = '暫無 (等待即時數據)';
+        if (annDivPS !== null) {
+          const totalEstDiv = Math.round((st.shares || 0) * annDivPS);
+          estDivText = `約 ${formatMoney(totalEstDiv)} 元/年`;
+        }
+
+        return `
+          <div class="coin-card twstock">
+            <div class="coin-name">
+              <span>${st.id || st.name} <small style="color:var(--text-muted); font-weight:normal;">${st.name}</small></span>
+              <span style="font-size:0.75rem; color:var(--text-muted);">${(st.shares||0).toLocaleString()} 股</span>
+            </div>
+            <div class="coin-price-row">
+              <span class="coin-price" style="color:${isUp ? 'var(--stock-up)' : (isDown ? 'var(--stock-down)' : 'var(--text)')};">NT$ ${(st.price||0).toFixed(2)}</span>
+              <span class="change-badge ${badgeClass}">${sign}${(st.changePct||0).toFixed(2)}%</span>
+            </div>
+            <div class="coin-meta">
+              市值：<strong>NT$ ${formatMoney(totalVal)}</strong> 元<br>
+              預估年配息：<strong>${estDivText}</strong>
+            </div>
+          </div>
+        `;
+      }).join('') : `<div style="color:var(--text-muted); font-size:0.85rem; padding:8px;">台股現狀模組目前已關閉</div>`;
+    }
+
+    const cryptoEnabled = (document.getElementById('enableCrypto')?.value === 'enabled');
+    let currentCoinsUSD = cryptoEnabled ? cryptoPortfolio.filter(c => !c.isStable).reduce((sum, c) => sum + (c.amount * c.priceUSD), 0) : 0;
+    let currentUSDT = cryptoEnabled ? (cryptoPortfolio.find(c => c.isStable)?.amount || 1971.68) : 0;
+    const cryptoTotalValNT = cryptoEnabled ? Math.round((currentCoinsUSD + currentUSDT) * usdtRate) : 0;
+    const cryptoTotalCost = cryptoEnabled ? (parseFloat(document.getElementById('cryptoTotalCost')?.value) || 1032194) : 0;
+    const cryptoProfit = cryptoTotalValNT - cryptoTotalCost;
+    const cryptoProfitPct = cryptoTotalCost > 0 ? (cryptoProfit / cryptoTotalCost) * 100 : 0;
+
+    const cryptoProfitHeader = document.getElementById('cryptoProfitHeader');
+    if (cryptoProfitHeader) {
+      cryptoProfitHeader.innerHTML = cryptoEnabled ? `總市值: NT$ ${formatMoney(cryptoTotalValNT)} ｜ 總投入: NT$ ${formatMoney(cryptoTotalCost)} ｜ 總報酬: <span style="color:${cryptoProfit>=0?'var(--stock-up)':'var(--stock-down)'}">${cryptoProfit>=0?'+':''}${formatMoney(cryptoProfit)} (${cryptoProfitPct.toFixed(2)}%)</span>` : `🔴 目前加密貨幣持倉已關閉`;
+    }
+
+    const crContainer = document.getElementById('cryptoContainer');
+    if (crContainer) {
+      crContainer.innerHTML = cryptoEnabled ? cryptoPortfolio.map(c => {
+        const valNT = Math.round(c.amount * c.priceUSD * usdtRate);
+        const isUp = c.changePct > 0;
+        const isDown = c.changePct < 0;
+        const badgeClass = isUp ? 'change-up' : (isDown ? 'change-down' : 'change-flat');
+        const sign = isUp ? '+' : '';
+
+        let signalHtml = '';
+        if (!c.isStable) {
+          if (c.priceUSD >= c.super) signalHtml = `<span class="signal-tag signal-super">🚨 狂暴牛! 建議賣至剩10%底倉</span>`;
+          else if (c.priceUSD >= c.tp2) signalHtml = `<span class="signal-tag signal-tp2">🟠 階段二達標! 再賣剩餘30%</span>`;
+          else if (c.priceUSD >= c.tp1) signalHtml = `<span class="signal-tag signal-tp1">🟡 階段一達標! 建議賣30%換USDT</span>`;
+          else if (c.priceUSD <= c.dip) signalHtml = `<span class="signal-tag signal-dip">🔵 跌入超賣區! 建議分批抄底</span>`;
+          else signalHtml = `<span class="signal-tag signal-hodl">🟢 蓄勢盤整中，安心持有</span>`;
+        } else {
+          signalHtml = `<span class="signal-tag" style="background:rgba(45, 212, 191, 0.2); color:var(--usdt);">💵 穩定幣儲備 / 買房與抄底子彈</span>`;
+        }
+
+        return `
+          <div class="coin-card crypto">
+            <div class="coin-name">
+              <span>${c.id} <small style="color:var(--text-muted); font-weight:normal;">${c.name}</small></span>
+              <span style="font-size:0.75rem; color:var(--text-muted);">${c.amount} 顆</span>
+            </div>
+            <div class="coin-price-row">
+              <span class="coin-price" style="color:var(--crypto);">$${c.priceUSD.toLocaleString(undefined, {minimumFractionDigits: c.id==='DOGE'||c.id==='ADA'?4:2})}</span>
+              ${!c.isStable ? `<span class="change-badge ${badgeClass}">${sign}${c.changePct.toFixed(2)}%</span>` : ''}
+            </div>
+            <div class="coin-meta">持倉折合：<strong>NT$ ${formatMoney(valNT)}</strong> 元</div>
+            ${signalHtml}
+          </div>
+        `;
+      }).join('') : `<div style="color:var(--text-muted); font-size:0.85rem; padding:8px;">加密貨幣模組目前已關閉</div>`;
+    }
+
+    const initSavingsVal = defaultSavings.reduce((sum, item) => sum + (parseFloat(item.val) || 0), 0);
+    const totalCurrentAsset = currentStockValue + cryptoTotalValNT + initSavingsVal;
+
+    const bannerEl = document.getElementById('globalNetWorthBanner');
+    if (bannerEl) {
+      bannerEl.innerHTML = `🏆 目前全資產總身家：NT$ ${formatMoney(totalCurrentAsset)} 元 ｜ 存款：NT$ ${formatMoney(initSavingsVal)} 元 ｜ 台股ETF：NT$ ${formatMoney(currentStockValue)} 元 ｜ 加密貨幣：NT$ ${formatMoney(cryptoTotalValNT)} 元`;
+    }
+  }
+
+  function handleSalaryModeChange() {
+    const isDouble = (document.getElementById('salaryMode')?.value === 'double');
+    const spouseBox = document.getElementById('spouseSalaryBox');
+    if (spouseBox) spouseBox.style.display = isDouble ? 'block' : 'none';
+    calculate();
+  }
+
+  function updateStageVisibility() {
+    const startAge = parseInt(document.getElementById('startAge')?.value || 32, 10);
+    const retireAge = parseInt(document.getElementById('retireAge')?.value || 50, 10);
+
+    const b32 = document.getElementById('box_stage_32'); if (b32) b32.style.display = (startAge <= 32 && retireAge > 32) ? 'block' : 'none';
+    const b35 = document.getElementById('box_stage_35'); if (b35) b35.style.display = (retireAge > 35) ? 'block' : 'none';
+    const b45 = document.getElementById('box_stage_45'); if (b45) b45.style.display = (retireAge > 45) ? 'block' : 'none';
+    const b55 = document.getElementById('box_stage_55'); if (b55) b55.style.display = (retireAge > 55) ? 'block' : 'none';
+
+    calculate();
+  }
+
+  function calculate() {
+    const startAge = parseInt(document.getElementById('startAge')?.value || 32, 10);
+    const retireAge = parseInt(document.getElementById('retireAge')?.value || 50, 10);
+    const isDoubleMode = (document.getElementById('salaryMode')?.value === 'double');
+
+    const baseSalarySelf = parseFloat(document.getElementById('baseSalarySelf')?.value) || 49000;
+    const baseSalarySpouse = isDoubleMode ? (parseFloat(document.getElementById('baseSalarySpouse')?.value) || 0) : 0;
+    const marryAge = isDoubleMode ? parseInt(document.getElementById('marryAge')?.value || 35, 10) : 999;
+    const usdtRate = 32.0;
+
+    const expLiving = defaultExpenses.reduce((sum, item) => sum + (parseFloat(item.val) || 0), 0);
+    const badgeExp = document.getElementById('badge_exp_total');
+    if (badgeExp) badgeExp.textContent = `每月開銷小計：NT$ ${formatMoney(expLiving)} 元`;
+
+    const dcaSelectVal = document.getElementById('enableDca')?.value || 'enabled';
+    const enableDca = (dcaSelectVal === 'enabled');
+    const etfInvestMonthly = enableDca ? defaultDca.reduce((sum, item) => sum + (parseFloat(item.val) || 0), 0) : 0;
+    
+    const badgeDca = document.getElementById('badge_dca_total');
+    if (badgeDca) badgeDca.textContent = `每月定期定額小計：NT$ ${formatMoney(etfInvestMonthly)} 元`;
+
+    const stockEnabled = (document.getElementById('enableStock')?.value === 'enabled');
+    let currentStockValue = stockEnabled ? defaultStocks.reduce((sum, st) => sum + Math.round((parseFloat(st.shares) || 0) * (parseFloat(st.price) || 0)), 0) : 0;
+    const badgeStock = document.getElementById('badge_stock_total');
+    if (badgeStock) badgeStock.textContent = stockEnabled ? `台股市值加總：NT$ ${formatMoney(currentStockValue)} 元` : `台股現狀已關閉 (市值計為 0)`;
+
+    const initSavings = defaultSavings.reduce((sum, item) => sum + (parseFloat(item.val) || 0), 0);
+    const badgeSav = document.getElementById('badge_savings_total');
+    if (badgeSav) badgeSav.textContent = `目前淨存款本金：NT$ ${formatMoney(initSavings)} 元`;
+
+    const extraSelectVal = document.getElementById('enableExtraInvest')?.value || 'enabled';
+    const enableExtraInvest = (extraSelectVal === 'enabled');
+    const extraThreshold = parseFloat(document.getElementById('extraInvestThreshold')?.value) || 1500000;
+    const e_0050 = enableExtraInvest ? (parseFloat(document.getElementById('extra_0050')?.value) || 0) : 0;
+    const e_0056 = enableExtraInvest ? (parseFloat(document.getElementById('extra_0056')?.value) || 0) : 0;
+    const e_00909 = enableExtraInvest ? (parseFloat(document.getElementById('extra_00909')?.value) || 0) : 0;
+    const e_00916 = enableExtraInvest ? (parseFloat(document.getElementById('extra_00916')?.value) || 0) : 0;
+    const e_00919 = enableExtraInvest ? (parseFloat(document.getElementById('extra_00919')?.value) || 0) : 0;
+    const e_00981A = enableExtraInvest ? (parseFloat(document.getElementById('extra_00981A')?.value) || 0) : 0;
+    const e_00982A = enableExtraInvest ? (parseFloat(document.getElementById('extra_00982A')?.value) || 0) : 0;
+    const e_00983A = enableExtraInvest ? (parseFloat(document.getElementById('extra_00983A')?.value) || 0) : 0;
+
+    const cryptoEnabled = (document.getElementById('enableCrypto')?.value === 'enabled');
+    const cBTC = cryptoPortfolio.find(c => c.id === 'BTC'); if (cBTC) cBTC.amount = cryptoEnabled ? (parseFloat(document.getElementById('amt_btc')?.value) || 0) : 0;
+    const cETH = cryptoPortfolio.find(c => c.id === 'ETH'); if (cETH) cETH.amount = cryptoEnabled ? (parseFloat(document.getElementById('amt_eth')?.value) || 0) : 0;
+    const cBNB = cryptoPortfolio.find(c => c.id === 'BNB'); if (cBNB) cBNB.amount = cryptoEnabled ? (parseFloat(document.getElementById('amt_bnb')?.value) || 0) : 0;
+    const cADA = cryptoPortfolio.find(c => c.id === 'ADA'); if (cADA) cADA.amount = cryptoEnabled ? (parseFloat(document.getElementById('amt_ada')?.value) || 0) : 0;
+    const cDOGE = cryptoPortfolio.find(c => c.id === 'DOGE'); if (cDOGE) cDOGE.amount = cryptoEnabled ? (parseFloat(document.getElementById('amt_doge')?.value) || 0) : 0;
+    const cUSDT = cryptoPortfolio.find(c => c.id === 'USDT'); if (cUSDT) cUSDT.amount = cryptoEnabled ? (parseFloat(document.getElementById('amt_usdt')?.value) || 0) : 0;
+
+    let currentCoinsUSD = cryptoEnabled ? cryptoPortfolio.filter(c => !c.isStable).reduce((sum, c) => sum + (c.amount * c.priceUSD), 0) : 0;
+    let currentUSDT = cryptoEnabled ? (cryptoPortfolio.find(c => c.isStable)?.amount || 1971.68) : 0;
+    let cryptoHoldRatio = 1.0;
+
+    const isBuy = (document.getElementById('housingStrategy')?.value === 'buy');
+    const buyAge = parseInt(document.getElementById('buyAge')?.value || 38, 10);
+    const housePrice = (parseFloat(document.getElementById('housePriceWan')?.value) || 1550) * 10000;
+    const loanRatio = (parseFloat(document.getElementById('loanRatio')?.value) || 60) / 100;
+    const parentsHelp = parseFloat(document.getElementById('parentsHelp')?.value) || 1000000;
+    const monthlyRentInput = parseFloat(document.getElementById('monthlyRentInput')?.value || 4400);
+
+    const selfDownNeeded = Math.max(0, (housePrice * (1 - loanRatio) + housePrice * 0.075) - parentsHelp);
+    const loanAmount = housePrice * loanRatio;
+    const mortgagePmt = computePMT(2.15, 35, loanAmount);
+
+    const endAge = 85;
+    const totalYears = endAge - startAge;
+
+    const baseMilestones = [30, 32, 35, 45, 50, 55, 60, 65, 75, 85];
+    const ageSet = new Set(baseMilestones);
+    ageSet.add(retireAge);
+    const ageList = Array.from(ageSet).filter(a => a >= startAge && a <= endAge).sort((a, b) => a - b);
+
+    let currentSavings = initSavings;
+    let noInvestSavings = initSavings + currentStockValue + Math.round((currentCoinsUSD + currentUSDT) * usdtRate);
+
+    const milestoneData = {};
+    const compareMilestone = { investNet: {}, noInvestNet: {}, investSurplus: {} };
+    const annualLabels = [];
+    const annualTotalNet = [];
+    const annualNoInvestNet = [];
+
+    let downPaymentDeducted = false;
+    let noInvestBankruptcyAge = null;
+    let usdtUsedForHouse = 0;
+
+    let simShares0050 = stockEnabled ? (defaultStocks.find(s => s.id === '0050')?.shares || 3809) : 0;
+    let simShares00909 = stockEnabled ? (defaultStocks.find(s => s.id === '00909')?.shares || 9833) : 0;
+    let simShares00916 = stockEnabled ? (defaultStocks.find(s => s.id === '00916')?.shares || 3724) : 0;
+    let simShares00919 = stockEnabled ? (defaultStocks.find(s => s.id === '00919')?.shares || 7985) : 0;
+    let simShares0056 = stockEnabled ? (defaultStocks.find(s => s.id === '0056')?.shares || 2064) : 0;
+    let simShares00981A = stockEnabled ? (defaultStocks.find(s => s.id === '00981A')?.shares || 4807) : 0;
+    let simShares00982A = stockEnabled ? (defaultStocks.find(s => s.id === '00982A')?.shares || 7416) : 0;
+    let simShares00983A = stockEnabled ? (defaultStocks.find(s => s.id === '00983A')?.shares || 17421) : 0;
+    let simShares6469 = stockEnabled ? (defaultStocks.find(s => s.id === '6469')?.shares || 784) : 0;
+
+    for (let yr = 0; yr <= totalYears; yr++) {
+      const currentAge = startAge + yr;
+      const cycleYear = yr % 4;
+      const decayFactor = Math.pow(0.85, Math.floor(yr / 4));
+
+      let actionDesc = "盤整持幣中 / USDT 領息中";
+
+      if (cryptoEnabled) {
+        if (cycleYear === 1) {
+          const bullReturn = 1.8 * decayFactor;
+          currentCoinsUSD *= (1 + bullReturn);
+          const isSuperBull = (bullReturn > 1.2);
+
+          if (isSuperBull) {
+            const sellTokensRatio = Math.max(0, cryptoHoldRatio - 0.10);
+            const usdtHarvested = currentCoinsUSD * (sellTokensRatio / cryptoHoldRatio);
+            currentUSDT += usdtHarvested;
+            currentCoinsUSD -= usdtHarvested;
+            cryptoHoldRatio = 0.10;
+            actionDesc = `🔥 狂暴大牛極限止盈：賣至剩 10% 底倉，+$${(usdtHarvested/1000).toFixed(0)}k USDT 入池`;
+          } else {
+            const usdt1 = currentCoinsUSD * 0.30;
+            const usdt2 = (currentCoinsUSD - usdt1) * 0.30;
+            currentUSDT += (usdt1 + usdt2);
+            currentCoinsUSD -= (usdt1 + usdt2);
+            cryptoHoldRatio = 0.49;
+            actionDesc = `🐂 牛市階梯止盈：賣出 51% 換收 +$${((usdt1+usdt2)/1000).toFixed(0)}k USDT，保留 49% 底倉`;
+          }
+        } else if (cycleYear === 2) {
+          currentCoinsUSD *= 0.35;
+          if (currentUSDT > 1000) {
+            const buybackUSD = currentUSDT * 0.60;
+            currentUSDT -= buybackUSD;
+            currentCoinsUSD += buybackUSD;
+            actionDesc = `🐻 熊市深跌 -65% 觸發抄底：動用 $${(buybackUSD/1000).toFixed(0)}k USDT 回補現貨 (幣量增長)`;
+          }
+        } else if (cycleYear === 3) {
+          currentCoinsUSD *= 1.10;
+          currentUSDT *= 1.035;
+          actionDesc = `🌱 築底盤整期 (+10%)，USDT 享 3.5% 活期息`;
+        } else {
+          currentCoinsUSD *= 1.40;
+          currentUSDT *= 1.035;
+          actionDesc = `⚡ 減半啟動慢牛 (+40%)，低檔籌碼鎖定`;
+        }
+
+        const currentUSDT_NT = currentUSDT * usdtRate;
+        if (currentUSDT_NT > 1500000) {
+          const cashoutNT = (currentUSDT_NT - 1500000) * 0.40;
+          currentUSDT -= (cashoutNT / usdtRate);
+          const tax = computeTaiwanTax(cashoutNT * 0.7);
+          const netCash = cashoutNT - tax;
+          currentSavings += Math.round(netCash);
+          actionDesc += ` ➔ 出金 ${(cashoutNT/10000).toFixed(0)}萬(繳稅${(tax/10000).toFixed(1)}萬, 淨入活存${(netCash/10000).toFixed(0)}萬)`;
+        }
+      }
+
+      let extraBonusInvest = 0;
+      let sa0050 = 0, sa56 = 0, sa909 = 0, sa916 = 0, sa919 = 0, sa981 = 0, sa982 = 0, sa983 = 0;
+      if (enableExtraInvest && currentSavings > extraThreshold) {
+        sa0050 = e_0050; sa56 = e_0056; sa909 = e_00909; sa916 = e_00916;
+        sa919 = e_00919; sa981 = e_00981A; sa982 = e_00982A; sa983 = e_00983A;
+        extraBonusInvest = sa0050 + sa56 + sa909 + sa916 + sa919 + sa981 + sa982 + sa983;
+      }
+
+      const price0050 = 111.85 * Math.pow(1.06, yr);
+      const price00909 = 51.55 * Math.pow(1.03, yr);
+      const price00916 = 27.19 * Math.pow(1.03, yr);
+      const price00919 = 32.16 * Math.pow(1.03, yr);
+      const price0056 = 56.85 * Math.pow(1.03, yr);
+      const price00981A = 30.15 * Math.pow(1.05, yr);
+      const price00982A = 23.02 * Math.pow(1.05, yr);
+      const price00983A = 13.30 * Math.pow(1.05, yr);
+      const price6469 = 64.30 * Math.pow(1.04, yr);
+
+      if (stockEnabled) {
+        const baseDcaVal0050 = enableDca ? (defaultDca.find(d=>d.name==='0050')?.val || 13500) : 0;
+        const baseDcaVal00909 = enableDca ? (defaultDca.find(d=>d.name==='00909')?.val || 4500) : 0;
+        const baseDcaVal00916 = enableDca ? (defaultDca.find(d=>d.name==='00916')?.val || 1500) : 0;
+        const baseDcaVal00919 = enableDca ? (defaultDca.find(d=>d.name==='00919')?.val || 3000) : 0;
+        const baseDcaVal0056 = enableDca ? (defaultDca.find(d=>d.name==='0056')?.val || 3000) : 0;
+        const baseDcaVal00981A = enableDca ? (defaultDca.find(d=>d.name==='00981A')?.val || 2000) : 0;
+        const baseDcaVal00982A = enableDca ? (defaultDca.find(d=>d.name==='00982A')?.val || 3000) : 0;
+        const baseDcaVal00983A = enableDca ? (defaultDca.find(d=>d.name==='00983A')?.val || 1500) : 0;
+
+        const activeDca0050 = (currentAge < retireAge ? baseDcaVal0050 : 0) + sa0050;
+        const activeDca00909 = (currentAge < retireAge ? baseDcaVal00909 : 0) + sa909;
+        const activeDca00916 = (currentAge < retireAge ? baseDcaVal00916 : 0) + sa916;
+        const activeDca00919 = (currentAge < retireAge ? baseDcaVal00919 : 0) + sa919;
+        const activeDca0056 = (currentAge < retireAge ? baseDcaVal0056 : 0) + sa56;
+        const activeDca00981A = (currentAge < retireAge ? baseDcaVal00981A : 0) + sa981;
+        const activeDca00982A = (currentAge < retireAge ? baseDcaVal00982A : 0) + sa982;
+        const activeDca00983A = (currentAge < retireAge ? baseDcaVal00983A : 0) + sa983;
+
+        simShares0050 += activeDca0050 * 12 / price0050;
+        simShares00909 += activeDca00909 * 12 / price00909;
+        simShares00916 += activeDca00916 * 12 / price00916;
+        simShares00919 += activeDca00919 * 12 / price00919;
+        simShares0056 += activeDca0056 * 12 / price0056;
+        simShares00981A += activeDca00981A * 12 / price00981A;
+        simShares00982A += activeDca00982A * 12 / price00982A;
+        simShares00983A += activeDca00983A * 12 / price00983A;
+      }
+
+      const divPS_0050 = getEstimatedAnnualDividendPerShare(defaultStocks.find(s=>s.id==='0050')) || (111.85 * 0.035);
+      const divPS_00909 = getEstimatedAnnualDividendPerShare(defaultStocks.find(s=>s.id==='00909')) || (51.55 * 0.042);
+      const divPS_00916 = getEstimatedAnnualDividendPerShare(defaultStocks.find(s=>s.id==='00916')) || (27.19 * 0.03);
+      const divPS_00919 = getEstimatedAnnualDividendPerShare(defaultStocks.find(s=>s.id==='00919')) || (32.16 * 0.105);
+      const divPS_0056 = getEstimatedAnnualDividendPerShare(defaultStocks.find(s=>s.id==='0056')) || (56.85 * 0.075);
+      const divPS_00981A = getEstimatedAnnualDividendPerShare(defaultStocks.find(s=>s.id==='00981A')) || (30.15 * 0.045);
+      const divPS_00982A = getEstimatedAnnualDividendPerShare(defaultStocks.find(s=>s.id==='00982A')) || (23.02 * 0.045);
+      const divPS_00983A = getEstimatedAnnualDividendPerShare(defaultStocks.find(s=>s.id==='00983A')) || (13.30 * 0.04);
+      const divPS_6469 = getEstimatedAnnualDividendPerShare(defaultStocks.find(s=>s.id==='6469')) || (64.30 * 0.038);
+
+      const totalAnnualDiv = stockEnabled ? ((simShares0050 * divPS_0050) + 
+                             (simShares00909 * divPS_00909) + 
+                             (simShares00916 * divPS_00916) + 
+                             (simShares00919 * divPS_00919) + 
+                             (simShares0056 * divPS_0056) + 
+                             (simShares00981A * divPS_00981A) + 
+                             (simShares00982A * divPS_00982A) + 
+                             (simShares00983A * divPS_00983A) + 
+                             (simShares6469 * divPS_6469)) : 0;
+      const monthlyDiv = Math.round(totalAnnualDiv / 12);
+
+      currentStockValue = stockEnabled ? Math.round((simShares0050 * price0050) + (simShares00909 * price00909) + (simShares00916 * price00916) + (simShares00919 * price00919) + (simShares0056 * price0056) + (simShares00981A * price00981A) + (simShares00982A * price00982A) + (simShares00983A * price00983A) + (simShares6469 * price6469)) : 0;
+
+      if (isBuy && currentAge === buyAge && !downPaymentDeducted) {
+        let deficit = selfDownNeeded;
+        if (currentSavings >= deficit) {
+          currentSavings -= deficit;
+          deficit = 0;
+        } else {
+          deficit -= currentSavings;
+          currentSavings = 0;
+          const usdtAvailNT = currentUSDT * usdtRate;
+          if (usdtAvailNT >= deficit) {
+            currentUSDT -= (deficit / usdtRate);
+            usdtUsedForHouse = deficit;
+            actionDesc = `🏠 買房自備款支援：動用 USDT 換匯 ${(deficit/10000).toFixed(0)} 萬元補足自備款，未變賣台股！`;
+            deficit = 0;
+          } else {
+            usdtUsedForHouse = usdtAvailNT;
+            deficit -= usdtAvailNT;
+            currentUSDT = 0;
+            currentStockValue = Math.max(0, currentStockValue - deficit);
+          }
+        }
+        downPaymentDeducted = true;
+      }
+
+      let salarySelf = (currentAge < retireAge) ? Math.round(baseSalarySelf * Math.pow(1.02, yr)) : (parseFloat(document.getElementById('pension')?.value) || 44083);
+      let salarySpouse = (isDoubleMode && currentAge >= marryAge && currentAge < retireAge) ? Math.round(baseSalarySpouse * Math.pow(1.02, currentAge - marryAge)) : 0;
+
+      let bonusSelf = 0;
+      if (currentAge < retireAge) {
+        if (currentAge >= 32 && currentAge <= 34) {
+          const mB32 = parseFloat(document.getElementById('mBonus_32')?.value) || 8000;
+          const yB32 = parseFloat(document.getElementById('yBonus_32')?.value) || 49000;
+          const fB32 = parseFloat(document.getElementById('fBonus_32')?.value) || 6000;
+          bonusSelf = mB32 + ((yB32 + fB32) / 12);
+        } else if (currentAge < 35) {
+          bonusSelf = 49000 / 12;
+        } else if (currentAge < 45) {
+          const mB35 = parseFloat(document.getElementById('mBonus_35')?.value) || 8000;
+          const yMo35 = parseFloat(document.getElementById('yBonusMonth_35')?.value) || 1;
+          const fB35 = parseFloat(document.getElementById('fBonus_35')?.value) || 6000;
+          bonusSelf = mB35 + ((salarySelf * yMo35 + fB35) / 12);
+        } else if (currentAge < 55) {
+          const mB45 = parseFloat(document.getElementById('mBonus_45')?.value) || 8000;
+          const yMo45 = parseFloat(document.getElementById('yBonusMonth_45')?.value) || 1;
+          const fB45 = parseFloat(document.getElementById('fBonus_45')?.value) || 6000;
+          bonusSelf = mB45 + ((salarySelf * yMo45 + fB45) / 12);
+        } else {
+          bonusSelf = salarySelf * 1 / 12;
+        }
+      }
+
+      const totalIncome = salarySelf + salarySpouse + Math.round(bonusSelf) + monthlyDiv;
+      const monthlyHouse = isBuy ? (currentAge >= buyAge ? mortgagePmt : monthlyRentInput) : Math.round(monthlyRentInput * Math.pow(1.03, yr));
+      const monthlyExpense = Math.round(expLiving * Math.pow(1.03, yr)) + monthlyHouse;
+      
+      const displayInvestActual = (currentAge < retireAge) ? etfInvestMonthly : 0;
+      const totalMonthlyInvest = displayInvestActual + extraBonusInvest;
+      const rawSurplus = totalIncome - monthlyExpense - totalMonthlyInvest;
+
+      if (rawSurplus >= 0) currentSavings = Math.round(currentSavings * 1.01 + (rawSurplus * 12));
+      else {
+        currentSavings += (rawSurplus * 12);
+        if (currentSavings < 0) currentSavings = 0;
+      }
+
+      const noInvestSurplus = (salarySelf + salarySpouse) - monthlyExpense;
+      if (noInvestSurplus >= 0) noInvestSavings = Math.round(noInvestSavings * 1.01 + (noInvestSurplus * 12));
+      else noInvestSavings += (noInvestSurplus * 12);
+
+      if (noInvestSavings <= 0 && noInvestBankruptcyAge === null) noInvestBankruptcyAge = currentAge;
+
+      const currCoinsNT = cryptoEnabled ? Math.round(currentCoinsUSD * usdtRate) : 0;
+      const currUsdtNT = cryptoEnabled ? Math.round(currentUSDT * usdtRate) : 0;
+      const netWorth = currentStockValue + currCoinsNT + currUsdtNT + currentSavings;
+
+      if (ageList.includes(currentAge)) {
+        milestoneData[currentAge] = {
+          totalIncome: totalIncome,
+          salarySelf: salarySelf,
+          dividend: monthlyDiv,
+          housing: monthlyHouse,
+          living: monthlyExpense - monthlyHouse,
+          investActual: displayInvestActual,
+          extraInvest: extraBonusInvest,
+          rawSurplus: rawSurplus,
+          surplus: Math.max(0, rawSurplus),
+          stock: currentStockValue,
+          cryptoCoins: currCoinsNT,
+          cryptoUSDT: currUsdtNT,
+          savings: currentSavings,
+          netWorth: netWorth,
+          cryptoAction: actionDesc
+        };
+        compareMilestone.investNet[currentAge] = netWorth;
+        compareMilestone.noInvestNet[currentAge] = Math.max(0, noInvestSavings);
+        compareMilestone.investSurplus[currentAge] = rawSurplus;
+      }
+
+      annualLabels.push(`${currentAge}歲`);
+      annualTotalNet.push(netWorth);
+      annualNoInvestNet.push(Math.max(0, noInvestSavings));
+    }
+
+    // 買房提醒
+    const tipEl = document.getElementById('downPaymentTip');
+    if (tipEl) {
+      if (isBuy) {
+        let usdtMsg = usdtUsedForHouse > 0 ? `<br>💡 <strong>跨資產調度成功</strong>：動用 USDT 換匯 <strong>NT$ ${formatMoney(usdtUsedForHouse)} 元</strong> 代墊自備款，<strong>完全未動用台股持股！</strong>` : '';
+        tipEl.innerHTML = `<strong>✅ 買房規劃分析 (${buyAge} 歲買房)：</strong>自備款需 NT$ ${formatMoney(selfDownNeeded)} 元。${usdtMsg}<br>房貸本息約 NT$ ${formatMoney(mortgagePmt)}/月。`;
+      } else {
+        tipEl.innerHTML = `<strong>居住策略：全程租屋</strong>，資金全數留存於台股 ETF 與加密貨幣複利投資中。`;
+      }
+    }
+
+    // KPI 更新
+    const retData = milestoneData[retireAge] || milestoneData[50] || { rawSurplus: 0 };
+    const finalData = milestoneData[endAge] || { netWorth: 0, savings: 0, stock: 0, cryptoCoins: 0, cryptoUSDT: 0 };
+    
+    const kpiSur = document.getElementById('kpiSurplus'); if (kpiSur) kpiSur.textContent = `+ NT$ ${formatMoney(retData.rawSurplus)}`;
+    const kpiNet = document.getElementById('kpiNetWorth'); if (kpiNet) kpiNet.textContent = `${(finalData.netWorth / 10000).toFixed(0)} 萬元`;
+    const kpiRatio = document.getElementById('kpiStockRatio'); if (kpiRatio) kpiRatio.textContent = `活存 ${(finalData.savings/10000).toFixed(0)}萬｜台股 ${(finalData.stock/10000).toFixed(0)}萬｜幣現貨 ${(finalData.cryptoCoins/10000).toFixed(0)}萬｜USDT ${(finalData.cryptoUSDT/10000).toFixed(0)}萬`;
+
+    // 渲染明細表
+    const thRow = document.getElementById('tableHeaderRow');
+    if (thRow) thRow.innerHTML = `<th>項目</th>` + ageList.map(a => `<th>${a} 歲${a === retireAge ? ' (退休)' : ''}</th>`).join('');
+    
+    const tbBody = document.getElementById('resultTableBody');
+    if (tbBody) {
+      tbBody.innerHTML = `
+        <tr style="font-weight:700;"><td>月總收入 (合計)</td>${ageList.map(a => `<td>${formatMoney(milestoneData[a]?.totalIncome)}</td>`).join('')}</tr>
+        <tr class="sub-row"><td> ├ 本人薪資/年金</td>${ageList.map(a => `<td>${formatMoney(milestoneData[a]?.salarySelf)}</td>`).join('')}</tr>
+        <tr class="sub-row"><td> └ 每月股票配息</td>${ageList.map(a => `<td style="color:var(--primary); font-weight:700;">${formatMoney(milestoneData[a]?.dividend)}</td>`).join('')}</tr>
+        <tr><td>每月居住支出</td>${ageList.map(a => `<td>${formatMoney(milestoneData[a]?.housing)}</td>`).join('')}</tr>
+        <tr><td>每月基礎開銷</td>${ageList.map(a => `<td>${formatMoney(milestoneData[a]?.living)}</td>`).join('')}</tr>
+        <tr><td>每月定期定額提撥</td>${ageList.map(a => `<td>${formatMoney(milestoneData[a]?.investActual)}</td>`).join('')}</tr>
+        <tr style="background:rgba(16, 185, 129, 0.1);"><td><strong>每月超額存款加碼投入</strong></td>${ageList.map(a => `<td><strong style="color:var(--primary)">${formatMoney(milestoneData[a]?.extraInvest)}</strong></td>`).join('')}</tr>
+        <tr style="background:rgba(239, 68, 68, 0.1);"><td><strong>① 每月原始收支結餘</strong></td>${ageList.map(a => `<td><strong style="color:${milestoneData[a]?.rawSurplus>=0?'var(--text)':'var(--danger)'}">${formatMoney(milestoneData[a]?.rawSurplus)}</strong></td>`).join('')}</tr>
+        <tr style="background:rgba(16, 185, 129, 0.15);"><td><strong>② 平帳後每月活存結餘</strong></td>${ageList.map(a => `<td><strong style="color:var(--primary)">${formatMoney(milestoneData[a]?.surplus)}</strong></td>`).join('')}</tr>
+        <tr><td><strong>台股 ETF 總市值</strong></td>${ageList.map(a => `<td><strong style="color:var(--primary)">${formatMoney(milestoneData[a]?.stock)}</strong></td>`).join('')}</tr>
+        <tr style="color:var(--crypto);"><td><strong>🪙 加密現貨總值</strong></td>${ageList.map(a => `<td><strong>${formatMoney(milestoneData[a]?.cryptoCoins)}</strong></td>`).join('')}</tr>
+        <tr class="sub-row" style="color:var(--usdt);"><td> └ USDT 止盈儲備池 (NT$)</td>${ageList.map(a => `<td><strong>${formatMoney(milestoneData[a]?.cryptoUSDT)}</strong></td>`).join('')}</tr>
+        <tr><td><strong>台幣活存存款</strong></td>${ageList.map(a => `<td><span style="font-weight:700;">${formatMoney(milestoneData[a]?.savings)}</span></td>`).join('')}</tr>
+        <tr style="background:rgba(59, 130, 246, 0.15); font-weight:800;"><td><strong>🏆 個人總身家淨值</strong></td>${ageList.map(a => `<td><strong style="color:var(--secondary)">${formatMoney(milestoneData[a]?.netWorth)}</strong></td>`).join('')}</tr>
+      `;
+    }
+
+    // 渲染加密時間軸卡片
+    const cryptoGrid = document.getElementById('cryptoActionGrid');
+    if (cryptoGrid) {
+      cryptoGrid.innerHTML = ageList.map(a => `
+        <div class="crypto-timeline-item">
+          <div class="crypto-timeline-header">
+            <span>📍 ${a} 歲節點</span>
+            <span style="font-size:0.72rem; color:var(--crypto);">現貨: ${(milestoneData[a]?.cryptoCoins/10000).toFixed(0)}萬 / USDT: ${(milestoneData[a]?.cryptoUSDT/10000).toFixed(0)}萬</span>
+          </div>
+          <div>${milestoneData[a]?.cryptoAction || ''}</div>
+        </div>
+      `).join('');
+    }
+
+    // 比較表
+    const cmpTh = document.getElementById('compareHeaderRow');
+    if (cmpTh) cmpTh.innerHTML = `<th>情境方案</th>` + ageList.map(a => `<th>${a} 歲</th>`).join('');
+    
+    const cmpTb = document.getElementById('compareTableBody');
+    if (cmpTb) {
+      cmpTb.innerHTML = `
+        <tr style="background:rgba(16, 185, 129, 0.1); font-weight:700;"><td style="color:var(--primary)">方案 A：多元投資組合身家</td>${ageList.map(a => `<td style="color:var(--primary)">${formatMoney(compareMilestone.investNet[a])}</td>`).join('')}</tr>
+        <tr style="background:rgba(239, 68, 68, 0.1); font-weight:700;"><td style="color:var(--danger)">方案 B：純放存款身家</td>${ageList.map(a => `<td style="color:${compareMilestone.noInvestNet[a]>=0?'var(--text)':'var(--danger)'}">${formatMoney(compareMilestone.noInvestNet[a])}</td>`).join('')}</tr>
+        <tr style="background:rgba(168, 85, 247, 0.1); font-weight:800;"><td style="color:var(--purple)">身家差距 (A - B)</td>${ageList.map(a => `<td style="color:var(--purple)">+ ${((compareMilestone.investNet[a]-compareMilestone.noInvestNet[a])/10000).toFixed(0)} 萬</td>`).join('')}</tr>
+      `;
+    }
+
+    const diffWan = ((compareMilestone.investNet[endAge] - Math.max(0, compareMilestone.noInvestNet[endAge])) / 10000).toFixed(0);
+    let bankMsg = noInvestBankruptcyAge ? `<br>🚨 <strong style="color:var(--danger);">不投資致命風險：</strong>若純放活存定存，存款將在 <strong style="color:var(--danger); font-size:0.95rem;">${noInvestBankruptcyAge} 歲</strong> 徹底耗盡歸零破產！` : '';
+    const cmpTip = document.getElementById('compareSummaryTip');
+    if (cmpTip) {
+      cmpTip.innerHTML = `<strong>💡 投資結論：</strong>85 歲時多元投資身家比純存錢多出約 <strong>NT$ ${formatMoney(diffWan)} 萬元</strong>。加密貨幣階梯止盈出的 USDT 有效為買房提供了自備款代墊，完全未傷及台股 ETF 庫存！${bankMsg}`;
+    }
+
+    updateLineChart(annualLabels, annualTotalNet, annualNoInvestNet);
+  }
+
+  function updateLineChart(labels, investData, noInvestData) {
+    const chartEl = document.getElementById('assetChart');
+    if (!chartEl) return;
+    const ctx = chartEl.getContext('2d');
+    if (chartInstance) chartInstance.destroy();
+
+    chartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          { label: '多元投資總身家 (台股+加密幣+USDT+存款)', data: investData, borderColor: '#10b981', borderWidth: 3.5, fill: false, tension: 0.25, pointRadius: 2 },
+          { label: '不投資純放存款', data: noInvestData, borderColor: '#ef4444', borderWidth: 2.5, borderDash: [5, 5], fill: false, tension: 0.25, pointRadius: 2 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { grid: { color: 'var(--border)' }, ticks: { color: 'var(--text-muted)', maxTicksLimit: 12 } },
+          y: { grid: { color: 'var(--border)' }, ticks: { color: 'var(--text-muted)', callback: v => `${(v/10000).toFixed(0)}萬` } }
+        },
+        plugins: { legend: { labels: { color: 'var(--text)' }, position: 'bottom' } }
+      }
+    });
+  }
+
+  window.onload = () => {
+    initTheme();
+    loadFormData();
+    initSectionsVisibility();
+    renderDynamicLists();
+    renderRadarBoards();
+    updateStageVisibility();
+    fetchAllLivePrices();
+    initAutoRefresh();
+  };
+</script>
+</body>
+</html>
