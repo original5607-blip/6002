@@ -3,11 +3,33 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>人生生存試算器 (夫妻雙年金獨立試算專業版)</title>
+  <title>人生生存試算器 (育兒教養模組完整版)</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    /* 預設 淺色主題變數 */
     :root {
+      --primary: #10b981;
+      --primary-dark: #059669;
+      --secondary: #3b82f6;
+      --bg: #f8fafc;
+      --card-bg: #1e293b;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: #334155;
+      --danger: #ef4444;
+      --accent: #f59e0b;
+      --purple: #a855f7;
+      --crypto: #fb923c;
+      --usdt: #2dd4bf;
+      --twstock: #60a5fa;
+      --stock-up: #f87171;
+      --stock-down: #4ade80;
+      --sub-bg: rgba(15, 23, 42, 0.5);
+      --kpi-bg: #0f172a;
+      --badge-bg: #0f172a;
+      --table-head: #0f172a;
+    }
+
+    [data-theme="light"] {
       --primary: #10b981;
       --primary-dark: #059669;
       --secondary: #3b82f6;
@@ -22,40 +44,12 @@
       --crypto: #f97316;
       --usdt: #0d9488;
       --twstock: #2563eb;
-      --stock-up: #dc2626;   /* 紅字 (漲) */
-      --stock-down: #16a34a; /* 綠字 (跌) */
+      --stock-up: #dc2626;
+      --stock-down: #16a34a;
       --sub-bg: #fafafa;
       --kpi-bg: #f1f5f9;
       --badge-bg: #f8fafc;
       --table-head: #f8fafc;
-      --chart-grid: rgba(0, 0, 0, 0.05);
-      --chart-legend: #1e293b;
-    }
-
-    /* 深色主題變數 */
-    [data-theme="dark"] {
-      --primary: #10b981;
-      --primary-dark: #059669;
-      --secondary: #3b82f6;
-      --bg: #0f172a;
-      --card-bg: #1e293b;
-      --text: #f1f5f9;
-      --text-muted: #94a3b8;
-      --border: #334155;
-      --danger: #ef4444;
-      --accent: #f59e0b;
-      --purple: #a855f7;
-      --crypto: #fb923c;
-      --usdt: #2dd4bf;
-      --twstock: #60a5fa;
-      --stock-up: #f87171;   /* 深色模式紅字 (漲) */
-      --stock-down: #4ade80; /* 深色模式綠字 (跌) */
-      --sub-bg: rgba(15, 23, 42, 0.5);
-      --kpi-bg: #0f172a;
-      --badge-bg: #0f172a;
-      --table-head: #0f172a;
-      --chart-grid: rgba(51, 65, 85, 0.4);
-      --chart-legend: #f1f5f9;
     }
 
     * {
@@ -161,9 +155,7 @@
       transition: all 0.2s;
     }
 
-    .btn-theme-toggle:hover {
-      opacity: 0.85;
-    }
+    .btn-theme-toggle:hover { opacity: 0.85; }
 
     .btn-refresh {
       background: var(--twstock);
@@ -175,10 +167,6 @@
       cursor: pointer;
       font-size: 0.85rem;
       transition: all 0.2s;
-    }
-
-    .btn-refresh:hover {
-      opacity: 0.85;
     }
 
     .auto-refresh-tag {
@@ -242,10 +230,7 @@
       margin: 3px 0;
     }
 
-    .coin-price {
-      font-size: 1.22rem;
-      font-weight: 800;
-    }
+    .coin-price { font-size: 1.22rem; font-weight: 800; }
 
     .change-badge {
       font-size: 0.72rem;
@@ -286,9 +271,7 @@
     }
 
     @media (min-width: 1160px) {
-      .grid {
-        grid-template-columns: 620px 1fr;
-      }
+      .grid { grid-template-columns: 620px 1fr; }
     }
 
     .card {
@@ -323,9 +306,7 @@
       align-items: center;
     }
 
-    .form-group {
-      margin-bottom: 8px;
-    }
+    .form-group { margin-bottom: 8px; }
 
     label {
       display: block;
@@ -347,9 +328,7 @@
       color: var(--text);
     }
 
-    input:focus, select:focus {
-      border-color: var(--primary);
-    }
+    input:focus, select:focus { border-color: var(--primary); }
 
     .input-row {
       display: grid;
@@ -396,6 +375,14 @@
     .crypto-box {
       background: rgba(249, 115, 22, 0.05);
       border: 1.5px dashed var(--crypto);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    .child-box {
+      background: rgba(16, 185, 129, 0.05);
+      border: 1.5px dashed var(--primary);
       border-radius: 10px;
       padding: 12px;
       margin-bottom: 12px;
@@ -449,14 +436,8 @@
       transition: background 0.2s, box-shadow 0.2s;
     }
 
-    .dynamic-item-row:active {
-      cursor: grabbing;
-    }
-
-    .dynamic-item-row.dragging {
-      opacity: 0.4;
-      background: var(--border);
-    }
+    .dynamic-item-row:active { cursor: grabbing; }
+    .dynamic-item-row.dragging { opacity: 0.4; background: var(--border); }
 
     .drag-handle {
       font-size: 1rem;
@@ -476,11 +457,7 @@
       font-size: 0.75rem;
       transition: all 0.2s;
     }
-
-    .btn-del-item:hover {
-      background: var(--danger);
-      color: #ffffff;
-    }
+    .btn-del-item:hover { background: var(--danger); color: #ffffff; }
 
     .btn-add-item {
       background: rgba(59, 130, 246, 0.15);
@@ -493,11 +470,7 @@
       font-weight: 700;
       transition: all 0.2s;
     }
-
-    .btn-add-item:hover {
-      background: var(--secondary);
-      color: #ffffff;
-    }
+    .btn-add-item:hover { background: var(--secondary); color: #ffffff; }
 
     .kpi-grid {
       display: grid;
@@ -505,12 +478,7 @@
       gap: 16px;
       margin-bottom: 20px;
     }
-
-    @media (min-width: 600px) {
-      .kpi-grid {
-        grid-template-columns: 1fr 1fr;
-      }
-    }
+    @media (min-width: 600px) { .kpi-grid { grid-template-columns: 1fr 1fr; } }
 
     .kpi-card {
       background: var(--kpi-bg);
@@ -519,72 +487,18 @@
       border-left: 5px solid var(--primary);
       border: 1px solid var(--border);
     }
+    .kpi-title { font-size: 0.82rem; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; }
+    .kpi-value { font-size: 1.5rem; font-weight: 800; color: var(--text); }
+    .kpi-desc { font-size: 0.78rem; color: var(--text-muted); margin-top: 4px; line-height: 1.4; }
 
-    .kpi-card.warning {
-      border-left-color: var(--danger);
-    }
+    .table-container { overflow-x: auto; margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; text-align: right; }
+    th, td { padding: 8px 8px; border-bottom: 1px solid var(--border); white-space: nowrap; vertical-align: middle; color: var(--text); }
+    th { background: var(--table-head); color: var(--text-muted); font-weight: 600; }
+    th:first-child, td:first-child { text-align: left; }
+    .sub-row td { color: var(--text-muted); font-size: 0.76rem; background: var(--sub-bg); }
 
-    .kpi-title {
-      font-size: 0.82rem;
-      color: var(--text-muted);
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-
-    .kpi-value {
-      font-size: 1.5rem;
-      font-weight: 800;
-      color: var(--text);
-    }
-
-    .kpi-desc {
-      font-size: 0.78rem;
-      color: var(--text-muted);
-      margin-top: 4px;
-      line-height: 1.4;
-    }
-
-    .table-container {
-      overflow-x: auto;
-      margin-bottom: 20px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.8rem;
-      text-align: right;
-    }
-
-    th, td {
-      padding: 8px 8px;
-      border-bottom: 1px solid var(--border);
-      white-space: nowrap;
-      vertical-align: middle;
-      color: var(--text);
-    }
-
-    th {
-      background: var(--table-head);
-      color: var(--text-muted);
-      font-weight: 600;
-    }
-
-    th:first-child, td:first-child {
-      text-align: left;
-    }
-
-    .sub-row td {
-      color: var(--text-muted);
-      font-size: 0.76rem;
-      background: var(--sub-bg);
-    }
-
-    .chart-container {
-      position: relative;
-      height: 330px;
-      width: 100%;
-    }
+    .chart-container { position: relative; height: 330px; width: 100%; }
 
     .crypto-timeline-grid {
       display: grid;
@@ -592,7 +506,6 @@
       gap: 12px;
       margin-top: 10px;
     }
-
     .crypto-timeline-item {
       background: var(--bg);
       border: 1px solid rgba(249, 115, 22, 0.3);
@@ -602,31 +515,17 @@
       font-size: 0.8rem;
       line-height: 1.45;
     }
+    .crypto-timeline-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; font-weight: 700; }
 
-    .crypto-timeline-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 4px;
-      font-weight: 700;
-    }
-
-    footer {
-      text-align: center;
-      padding: 24px 0 16px;
-      color: var(--text-muted);
-      font-size: 0.82rem;
-      border-top: 1px solid var(--border);
-      margin-top: 24px;
-    }
+    footer { text-align: center; padding: 24px 0 16px; color: var(--text-muted); font-size: 0.82rem; border-top: 1px solid var(--border); margin-top: 24px; }
   </style>
 </head>
 <body data-theme="dark">
 
 <div class="container">
   <header>
-    <h1>人生生存試算器 (夫妻雙年金獨立試算專業版)</h1>
-    <p>全資產即時總覽、紅漲綠跌、主題切換、各模組獨立下拉開關與自動收合模型</p>
+    <h1>人生生存試算器 (育兒教養模組完整版)</h1>
+    <p>全資產即時總覽、紅漲綠跌、主題切換、育兒教育支出與雙年金獨立模型</p>
   </header>
 
   <!-- 頂部即時行情大看板 -->
@@ -780,6 +679,74 @@
           <div class="form-group"><label id="lbl_yBonus_55">年終月數</label><select id="yBonusMonth_55" onchange="calculate()"><option value="0.5">0.5 個月</option><option value="1" selected>1 個月</option><option value="2">2 個月</option></select></div>
           <div class="form-group"><label>三節獎金(年)</label><input type="number" id="fBonus_55" value="8000" oninput="calculate()"></div>
         </div>
+      </div>
+
+      <!-- 👶 小孩生養與五大教育階段支出專區 -->
+      <div class="section-subtitle" style="color:var(--primary);">
+        <span>👶 小孩生養與五大教育階段支出設定</span>
+      </div>
+      <div class="child-box">
+        <div class="input-row" style="margin-bottom:8px;">
+          <div class="form-group">
+            <label>規劃幾歲生小孩？</label>
+            <select id="childBirthAge" onchange="calculate()">
+              <option value="0" selected>無生育規劃 (0元)</option>
+              <option value="26">26 歲生小孩</option>
+              <option value="28">28 歲生小孩</option>
+              <option value="30">30 歲生小孩</option>
+              <option value="32">32 歲生小孩</option>
+              <option value="35">35 歲生小孩</option>
+              <option value="38">38 歲生小孩</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>0～2歲女性產假/育嬰留停薪資</label>
+            <select id="maternityLeaveMode" onchange="calculate()">
+              <option value="full" selected>正常上班 (100%全薪)</option>
+              <option value="half">產假/育嬰津貼 (半薪 50%)</option>
+              <option value="zero">全職育嬰留停 (無薪 0%)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="stage-label" style="color:var(--primary);">🍼 階段一：0～3 歲嬰幼兒期 (每月支出)</div>
+        <div class="input-row-4">
+          <div class="form-group"><label>奶粉伙食</label><input type="number" id="c1_milk" value="4000" oninput="calculate()"></div>
+          <div class="form-group"><label>尿布耗材</label><input type="number" id="c1_diaper" value="2000" oninput="calculate()"></div>
+          <div class="form-group"><label>托育保母</label><input type="number" id="c1_nanny" value="15000" oninput="calculate()"></div>
+          <div class="form-group"><label>幼兒保險</label><input type="number" id="c1_insurance" value="2500" oninput="calculate()"></div>
+        </div>
+
+        <div class="stage-label" style="color:var(--primary); margin-top:8px;">🎨 階段二：3～6 歲幼兒園期 (每月支出)</div>
+        <div class="input-row-3">
+          <div class="form-group"><label>學費</label><input type="number" id="c2_tuition" value="8000" oninput="calculate()"></div>
+          <div class="form-group"><label>才藝啟蒙</label><input type="number" id="c2_talent" value="3000" oninput="calculate()"></div>
+          <div class="form-group"><label>飲食衣物</label><input type="number" id="c2_life" value="4000" oninput="calculate()"></div>
+        </div>
+
+        <div class="stage-label" style="color:var(--primary); margin-top:8px;">🎒 階段三：6～12 歲國小期 (每月支出)</div>
+        <div class="input-row-4">
+          <div class="form-group"><label>學校雜費</label><input type="number" id="c3_school" value="2000" oninput="calculate()"></div>
+          <div class="form-group"><label>課後安親</label><input type="number" id="c3_after" value="7000" oninput="calculate()"></div>
+          <div class="form-group"><label>才藝補習</label><input type="number" id="c3_cram" value="3000" oninput="calculate()"></div>
+          <div class="form-group"><label>零用錢</label><input type="number" id="c3_pocket" value="800" oninput="calculate()"></div>
+        </div>
+
+        <div class="stage-label" style="color:var(--primary); margin-top:8px;">📖 階段四：12～18 歲國高中期 (每月支出)</div>
+        <div class="input-row-3">
+          <div class="form-group"><label>學費雜支</label><input type="number" id="c4_school" value="3000" oninput="calculate()"></div>
+          <div class="form-group"><label>升學補習</label><input type="number" id="c4_cram" value="10000" oninput="calculate()"></div>
+          <div class="form-group"><label>零用錢</label><input type="number" id="c4_pocket" value="2500" oninput="calculate()"></div>
+        </div>
+
+        <div class="stage-label" style="color:var(--primary); margin-top:8px;">🎓 階段五：18～22 歲大學期 (每月支出)</div>
+        <div class="input-row-3">
+          <div class="form-group"><label>學雜費</label><input type="number" id="c5_tuition" value="5000" oninput="calculate()"></div>
+          <div class="form-group"><label>住宿租金</label><input type="number" id="c5_rent" value="6000" oninput="calculate()"></div>
+          <div class="form-group"><label>生活伙食</label><input type="number" id="c5_life" value="9000" oninput="calculate()"></div>
+        </div>
+
+        <div class="tip-box summary-badge" id="badge_child_total" style="margin-top:8px;">育兒總開銷試算中...</div>
       </div>
 
       <!-- 居住規劃 -->
@@ -1164,11 +1131,9 @@
   function renderDcaListToContainer() {
     const container = document.getElementById('dcaListContainer');
     if (!container) return;
-
     container.innerHTML = defaultDca.map((item, idx) => {
       const cleanId = (item.name || '').trim().toUpperCase();
       const autoName = stockNameMap[cleanId] || '';
-
       return `
         <div class="dynamic-item-row" draggable="true" data-index="${idx}" data-type="dca"
              ondragstart="onDragStart(event)" ondragover="onDragOver(event)" ondrop="onDrop(event, 'dca')">
@@ -1185,11 +1150,9 @@
   function renderStockListToContainer() {
     const container = document.getElementById('stockListContainer');
     if (!container) return;
-
     container.innerHTML = defaultStocks.map((item, idx) => {
       const cleanId = (item.id || '').trim().toUpperCase();
       const autoName = stockNameMap[cleanId] || item.name || '';
-
       return `
         <div class="dynamic-item-row" draggable="true" data-index="${idx}" data-type="stock"
              ondragstart="onDragStart(event)" ondragover="onDragOver(event)" ondrop="onDrop(event, 'stock')">
@@ -1207,9 +1170,7 @@
   function stockIdInput(idx, val) {
     defaultStocks[idx]['id'] = val;
     const cleanId = val.trim().toUpperCase();
-    if (stockNameMap[cleanId]) {
-      defaultStocks[idx]['name'] = stockNameMap[cleanId];
-    }
+    if (stockNameMap[cleanId]) { defaultStocks[idx]['name'] = stockNameMap[cleanId]; }
     renderStockListToContainer();
     calculate();
   }
@@ -1217,7 +1178,6 @@
   function renderListToContainer(containerId, dataArray, typeKey) {
     const container = document.getElementById(containerId);
     if (!container) return;
-
     container.innerHTML = dataArray.map((item, idx) => {
       return `
         <div class="dynamic-item-row" draggable="true" data-index="${idx}" data-type="${typeKey}"
@@ -1272,7 +1232,6 @@
     const srcIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
     const targetIdx = parseInt(e.currentTarget.dataset.index, 10);
     if (isNaN(srcIdx) || srcIdx === targetIdx) return;
-
     let targetArray = typeKey === 'exp' ? defaultExpenses : typeKey === 'dca' ? defaultDca : typeKey === 'stock' ? defaultStocks : defaultSavings;
     const movedItem = targetArray.splice(srcIdx, 1)[0];
     targetArray.splice(targetIdx, 0, movedItem);
@@ -1286,22 +1245,16 @@
 
   function saveFormData() {
     const inputs = document.querySelectorAll('input, select');
-    const data = {
-      defaultExpenses: defaultExpenses,
-      defaultDca: defaultDca,
-      defaultStocks: defaultStocks,
-      defaultSavings: defaultSavings,
-      fields: {}
-    };
+    const data = { defaultExpenses, defaultDca, defaultStocks, defaultSavings, fields: {} };
     inputs.forEach(el => {
       if (el.id) data.fields[el.id] = (el.type === 'checkbox') ? el.checked : el.value;
     });
-    localStorage.setItem('financial_sim_v37_store', JSON.stringify(data));
+    localStorage.setItem('financial_sim_v38_store', JSON.stringify(data));
     showSaveBadge();
   }
 
   function loadFormData() {
-    const saved = localStorage.getItem('financial_sim_v37_store');
+    const saved = localStorage.getItem('financial_sim_v38_store');
     if (!saved) return;
     try {
       const data = JSON.parse(saved);
@@ -1323,7 +1276,7 @@
 
   function resetFormData() {
     if (confirm('確定要清除所有自訂修改，恢復為預設設定嗎？')) {
-      localStorage.removeItem('financial_sim_v37_store');
+      localStorage.removeItem('financial_sim_v38_store');
       location.reload();
     }
   }
@@ -1362,7 +1315,6 @@
   async function fetchAllLivePrices() {
     const statusEl = document.getElementById('apiStatus');
     if (statusEl) { statusEl.textContent = '⏳ 即時報價更新中...'; statusEl.style.color = 'var(--secondary)'; }
-
     const cryptoSymbols = ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'ADAUSDT', 'DOGEUSDT'];
     try {
       const cryptoReqs = cryptoSymbols.map(s => fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${s}`).then(r => r.json()));
@@ -1378,14 +1330,12 @@
     } catch (e) {
       if (statusEl) { statusEl.textContent = `● 報價載入完成 (${new Date().toLocaleTimeString()})`; statusEl.style.color = 'var(--primary)'; }
     }
-
     renderRadarBoards();
     calculate();
   }
 
   function renderRadarBoards() {
     const usdtRate = 32.0;
-
     const stockEnabled = (document.getElementById('enableStock')?.value === 'enabled');
     let currentStockValue = stockEnabled ? defaultStocks.reduce((sum, st) => sum + Math.round((parseFloat(st.shares) || 0) * (parseFloat(st.price) || 0)), 0) : 0;
     const stockTotalCost = stockEnabled ? (parseFloat(document.getElementById('stockTotalCost')?.value) || 1616389) : 0;
@@ -1408,14 +1358,12 @@
         const isDown = (st.changePct || 0) < 0;
         const badgeClass = isUp ? 'change-up' : (isDown ? 'change-down' : 'change-flat');
         const sign = isUp ? '+' : '';
-
         const annDivPS = getEstimatedAnnualDividendPerShare(st);
         let estDivText = '暫無 (等待即時數據)';
         if (annDivPS !== null) {
           const totalEstDiv = Math.round((st.shares || 0) * annDivPS);
           estDivText = `約 ${formatMoney(totalEstDiv)} 元/年`;
         }
-
         return `
           <div class="coin-card twstock">
             <div class="coin-name">
@@ -1456,7 +1404,6 @@
         const isDown = c.changePct < 0;
         const badgeClass = isUp ? 'change-up' : (isDown ? 'change-down' : 'change-flat');
         const sign = isUp ? '+' : '';
-
         let signalHtml = '';
         if (!c.isStable) {
           if (c.priceUSD >= c.super) signalHtml = `<span class="signal-tag signal-super">🚨 狂暴牛! 建議賣至剩10%底倉</span>`;
@@ -1467,7 +1414,6 @@
         } else {
           signalHtml = `<span class="signal-tag" style="background:rgba(45, 212, 191, 0.2); color:var(--usdt);">💵 穩定幣儲備 / 買房與抄底子彈</span>`;
         }
-
         return `
           <div class="coin-card crypto">
             <div class="coin-name">
@@ -1487,7 +1433,6 @@
 
     const initSavingsVal = defaultSavings.reduce((sum, item) => sum + (parseFloat(item.val) || 0), 0);
     const totalCurrentAsset = currentStockValue + cryptoTotalValNT + initSavingsVal;
-
     const bannerEl = document.getElementById('globalNetWorthBanner');
     if (bannerEl) {
       bannerEl.innerHTML = `🏆 目前全資產總身家：NT$ ${formatMoney(totalCurrentAsset)} 元 ｜ 存款：NT$ ${formatMoney(initSavingsVal)} 元 ｜ 台股ETF：NT$ ${formatMoney(currentStockValue)} 元 ｜ 加密貨幣：NT$ ${formatMoney(cryptoTotalValNT)} 元`;
@@ -1569,10 +1514,33 @@
     let currentUSDT = cryptoEnabled ? (cryptoPortfolio.find(c => c.isStable)?.amount || 1971.68) : 0;
     let cryptoHoldRatio = 1.0;
 
+    // 👶 育兒教養與教育階段開銷計算
+    const childBirthAge = parseInt(document.getElementById('childBirthAge')?.value || 0, 10);
+    const maternityLeaveMode = document.getElementById('maternityLeaveMode')?.value || 'full';
+    
+    // 各階段每月費用讀取
+    const c1_m = (parseFloat(document.getElementById('c1_milk')?.value)||0) + (parseFloat(document.getElementById('c1_diaper')?.value)||0) + (parseFloat(document.getElementById('c1_nanny')?.value)||0) + (parseFloat(document.getElementById('c1_insurance')?.value)||0);
+    const c2_m = (parseFloat(document.getElementById('c2_tuition')?.value)||0) + (parseFloat(document.getElementById('c2_talent')?.value)||0) + (parseFloat(document.getElementById('c2_life')?.value)||0);
+    const c3_m = (parseFloat(document.getElementById('c3_school')?.value)||0) + (parseFloat(document.getElementById('c3_after')?.value)||0) + (parseFloat(document.getElementById('c3_cram')?.value)||0) + (parseFloat(document.getElementById('c3_pocket')?.value)||0);
+    const c4_m = (parseFloat(document.getElementById('c4_school')?.value)||0) + (parseFloat(document.getElementById('c4_cram')?.value)||0) + (parseFloat(document.getElementById('c4_pocket')?.value)||0);
+    const c5_m = (parseFloat(document.getElementById('c5_tuition')?.value)||0) + (parseFloat(document.getElementById('c5_rent')?.value)||0) + (parseFloat(document.getElementById('c5_life')?.value)||0);
+
+    let rawTotalChildCost22Years = 0;
+    if (childBirthAge > 0) {
+      rawTotalChildCost22Years = (c1_m * 36) + (c2_m * 36) + (c3_m * 72) + (c4_m * 72) + (c5_m * 48);
+    }
+    const childInflationTotal = rawTotalChildCost22Years * Math.pow(1.03, 10);
+    const badgeChild = document.getElementById('badge_child_total');
+    if (badgeChild) {
+      badgeChild.innerHTML = childBirthAge > 0 
+        ? `👶 22年育兒總開銷 (${childBirthAge} 歲生小孩)：無通膨 NT$ ${formatMoney(rawTotalChildCost22Years)} 元 ｜ 計入3%通膨約 <strong>NT$ ${(childInflationTotal/10000).toFixed(0)} 萬元</strong>`
+        : `👶 目前設定：無生育規劃 (0元)`;
+    }
+
     const isBuy = (document.getElementById('housingStrategy')?.value === 'buy');
     const buyAge = parseInt(document.getElementById('buyAge')?.value || 38, 10);
     const housePrice = (parseFloat(document.getElementById('housePriceWan')?.value) || 1550) * 10000;
-    const loanRatio = (parseFloat(document.getElementById('loanRatio')?.value) || 60) / 100;
+    const loanRatio = (parseFloat(document.getElementById('loanRatio')?.value || 60)) / 100;
     const parentsHelp = parseFloat(document.getElementById('parentsHelp')?.value) || 1000000;
     const monthlyRentInput = parseFloat(document.getElementById('monthlyRentInput')?.value || 4400);
 
@@ -1586,6 +1554,14 @@
     const baseMilestones = [30, 32, 35, 45, 50, 55, 60, 65, 75, 85];
     const ageSet = new Set(baseMilestones);
     ageSet.add(retireAge);
+    if (childBirthAge > 0) {
+      ageSet.add(childBirthAge);
+      ageSet.add(childBirthAge + 3);
+      ageSet.add(childBirthAge + 6);
+      ageSet.add(childBirthAge + 12);
+      ageSet.add(childBirthAge + 18);
+      ageSet.add(childBirthAge + 22);
+    }
     const ageList = Array.from(ageSet).filter(a => a >= startAge && a <= endAge).sort((a, b) => a - b);
 
     let currentSavings = initSavings;
@@ -1793,9 +1769,30 @@
         }
       }
 
+      // 計算育兒階段每月開銷（含3%複利通膨）
+      let childMonthlyExpense = 0;
+      if (childBirthAge > 0) {
+        const childAge = currentAge - childBirthAge;
+        if (childAge >= 0 && childAge < 22) {
+          const inflationFactor = Math.pow(1.03, yr);
+          if (childAge < 3) childMonthlyExpense = c1_m * inflationFactor;
+          else if (childAge < 6) childMonthlyExpense = c2_m * inflationFactor;
+          else if (childAge < 12) childMonthlyExpense = c3_m * inflationFactor;
+          else if (childAge < 18) childMonthlyExpense = c4_m * inflationFactor;
+          else if (childAge < 22) childMonthlyExpense = c5_m * inflationFactor;
+
+          // 0~2歲育嬰留停扣薪處理
+          if (childAge < 2 && maternityLeaveMode === 'half') {
+            salarySelf *= 0.5;
+          } else if (childAge < 2 && maternityLeaveMode === 'zero') {
+            salarySelf = 0;
+          }
+        }
+      }
+
       const totalIncome = salarySelf + salarySpouse + Math.round(bonusSelf) + monthlyDiv;
       const monthlyHouse = isBuy ? (currentAge >= buyAge ? mortgagePmt : monthlyRentInput) : Math.round(monthlyRentInput * Math.pow(1.03, yr));
-      const monthlyExpense = Math.round(expLiving * Math.pow(1.03, yr)) + monthlyHouse;
+      const monthlyExpense = Math.round(expLiving * Math.pow(1.03, yr)) + monthlyHouse + Math.round(childMonthlyExpense);
       
       const displayInvestActual = (currentAge < retireAge) ? etfInvestMonthly : 0;
       const totalMonthlyInvest = displayInvestActual + extraBonusInvest;
@@ -1823,7 +1820,7 @@
           salarySelf: salarySelf,
           dividend: monthlyDiv,
           housing: monthlyHouse,
-          living: monthlyExpense - monthlyHouse,
+          living: (monthlyExpense - monthlyHouse),
           investActual: displayInvestActual,
           extraInvest: extraBonusInvest,
           rawSurplus: rawSurplus,
@@ -1845,7 +1842,6 @@
       annualNoInvestNet.push(Math.max(0, noInvestSavings));
     }
 
-    // 買房提醒
     const tipEl = document.getElementById('downPaymentTip');
     if (tipEl) {
       if (isBuy) {
@@ -1856,7 +1852,6 @@
       }
     }
 
-    // KPI 更新
     const retData = milestoneData[retireAge] || milestoneData[50] || { rawSurplus: 0 };
     const finalData = milestoneData[endAge] || { netWorth: 0, savings: 0, stock: 0, cryptoCoins: 0, cryptoUSDT: 0 };
     
@@ -1864,7 +1859,6 @@
     const kpiNet = document.getElementById('kpiNetWorth'); if (kpiNet) kpiNet.textContent = `${(finalData.netWorth / 10000).toFixed(0)} 萬元`;
     const kpiRatio = document.getElementById('kpiStockRatio'); if (kpiRatio) kpiRatio.textContent = `活存 ${(finalData.savings/10000).toFixed(0)}萬｜台股 ${(finalData.stock/10000).toFixed(0)}萬｜幣現貨 ${(finalData.cryptoCoins/10000).toFixed(0)}萬｜USDT ${(finalData.cryptoUSDT/10000).toFixed(0)}萬`;
 
-    // 渲染明細表
     const thRow = document.getElementById('tableHeaderRow');
     if (thRow) thRow.innerHTML = `<th>項目</th>` + ageList.map(a => `<th>${a} 歲${a === retireAge ? ' (退休)' : ''}</th>`).join('');
     
@@ -1875,7 +1869,7 @@
         <tr class="sub-row"><td> ├ 本人薪資/年金</td>${ageList.map(a => `<td>${formatMoney(milestoneData[a]?.salarySelf)}</td>`).join('')}</tr>
         <tr class="sub-row"><td> └ 每月股票配息</td>${ageList.map(a => `<td style="color:var(--primary); font-weight:700;">${formatMoney(milestoneData[a]?.dividend)}</td>`).join('')}</tr>
         <tr><td>每月居住支出</td>${ageList.map(a => `<td>${formatMoney(milestoneData[a]?.housing)}</td>`).join('')}</tr>
-        <tr><td>每月基礎開銷</td>${ageList.map(a => `<td>${formatMoney(milestoneData[a]?.living)}</td>`).join('')}</tr>
+        <tr><td>每月基礎與育兒開銷</td>${ageList.map(a => `<td>${formatMoney(milestoneData[a]?.living)}</td>`).join('')}</tr>
         <tr><td>每月定期定額提撥</td>${ageList.map(a => `<td>${formatMoney(milestoneData[a]?.investActual)}</td>`).join('')}</tr>
         <tr style="background:rgba(16, 185, 129, 0.1);"><td><strong>每月超額存款加碼投入</strong></td>${ageList.map(a => `<td><strong style="color:var(--primary)">${formatMoney(milestoneData[a]?.extraInvest)}</strong></td>`).join('')}</tr>
         <tr style="background:rgba(239, 68, 68, 0.1);"><td><strong>① 每月原始收支結餘</strong></td>${ageList.map(a => `<td><strong style="color:${milestoneData[a]?.rawSurplus>=0?'var(--text)':'var(--danger)'}">${formatMoney(milestoneData[a]?.rawSurplus)}</strong></td>`).join('')}</tr>
@@ -1888,7 +1882,6 @@
       `;
     }
 
-    // 渲染加密時間軸卡片
     const cryptoGrid = document.getElementById('cryptoActionGrid');
     if (cryptoGrid) {
       cryptoGrid.innerHTML = ageList.map(a => `
@@ -1902,7 +1895,6 @@
       `).join('');
     }
 
-    // 比較表
     const cmpTh = document.getElementById('compareHeaderRow');
     if (cmpTh) cmpTh.innerHTML = `<th>情境方案</th>` + ageList.map(a => `<th>${a} 歲</th>`).join('');
     
