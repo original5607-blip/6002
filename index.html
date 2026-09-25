@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>人生生存試算器 (2026/09/22 最新收盤價對齊版)</title>
+  <title>人生生存試算器 (夫妻雙年金獨立試算專業版)</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     /* 預設 淺色主題變數 */
@@ -625,7 +625,7 @@
 
 <div class="container">
   <header>
-    <h1>人生生存試算器 (2026/09/22 收盤價對齊版)</h1>
+    <h1>人生生存試算器 (夫妻雙年金獨立試算專業版)</h1>
     <p>全資產即時總覽、紅漲綠跌、主題切換、各模組獨立下拉開關與自動收合模型</p>
   </header>
 
@@ -863,7 +863,7 @@
         </div>
       </div>
 
-      <!-- 3. 目前台股庫存現狀設定區塊 (已套用 2026/09/22 最新正確收盤價) -->
+      <!-- 3. 目前台股庫存現狀設定區塊 -->
       <div class="section-subtitle">
         <span>📊 目前台股庫存持有股數現狀</span>
         <div style="display:flex; align-items:center; gap:6px;">
@@ -924,8 +924,16 @@
         </div>
       </div>
 
+      <!-- 退休年金設定區塊 (支援單人或夫妻雙人各自填寫) -->
       <div class="input-row" style="margin-top:10px;">
-        <div class="form-group"><label>退休後每月年金 (NT$)</label><input type="number" id="pension" value="44083" oninput="calculate()"></div>
+        <div class="form-group">
+          <label>我的退休後每月年金 (NT$)</label>
+          <input type="number" id="pensionSelf" value="44083" oninput="calculate()">
+        </div>
+        <div class="form-group" id="spousePensionGroup" style="display:none;">
+          <label style="color:var(--purple);">另一半退休後每月年金 (NT$)</label>
+          <input type="number" id="pensionSpouse" value="30000" oninput="calculate()">
+        </div>
       </div>
     </div>
 
@@ -954,7 +962,6 @@
           </table>
         </div>
 
-        <div class="card-title">📉 60年總資產走勢曲線 (多元投資 vs 純存錢)</div>
         <div class="chart-container"><canvas id="assetChart"></canvas></div>
       </div>
 
@@ -1049,6 +1056,8 @@
 
     const cryptoVal = document.getElementById('enableCrypto')?.value || 'enabled';
     toggleSection('cryptoSection', cryptoVal);
+
+    handleSalaryModeChange();
   }
 
   let defaultExpenses = [
@@ -1074,7 +1083,6 @@
     { name: '00982A', val: 3000 }
   ];
 
-  // 已精準更新為您提供的 2026/09/22 收盤價
   let defaultStocks = [
     { id: '0050', name: '元大台灣50', shares: 3809, price: 111.85, changePct: 0.85, changeAmt: 0.95, yield: 3.5, freq: 'quarter', historyDivs: [1.2, 1.1, 1.0, 0.9] },
     { id: '00909', name: '國泰數位支付', shares: 9833, price: 51.55, changePct: 1.40, changeAmt: 0.70, yield: 4.2, freq: 'year', historyDivs: [1.81] },
@@ -1288,12 +1296,12 @@
     inputs.forEach(el => {
       if (el.id) data.fields[el.id] = (el.type === 'checkbox') ? el.checked : el.value;
     });
-    localStorage.setItem('financial_sim_v36_store', JSON.stringify(data));
+    localStorage.setItem('financial_sim_v37_store', JSON.stringify(data));
     showSaveBadge();
   }
 
   function loadFormData() {
-    const saved = localStorage.getItem('financial_sim_v36_store');
+    const saved = localStorage.getItem('financial_sim_v37_store');
     if (!saved) return;
     try {
       const data = JSON.parse(saved);
@@ -1315,7 +1323,7 @@
 
   function resetFormData() {
     if (confirm('確定要清除所有自訂修改，恢復為預設設定嗎？')) {
-      localStorage.removeItem('financial_sim_v36_store');
+      localStorage.removeItem('financial_sim_v37_store');
       location.reload();
     }
   }
@@ -1489,7 +1497,9 @@
   function handleSalaryModeChange() {
     const isDouble = (document.getElementById('salaryMode')?.value === 'double');
     const spouseBox = document.getElementById('spouseSalaryBox');
+    const spousePensionGroup = document.getElementById('spousePensionGroup');
     if (spouseBox) spouseBox.style.display = isDouble ? 'block' : 'none';
+    if (spousePensionGroup) spousePensionGroup.style.display = isDouble ? 'block' : 'none';
     calculate();
   }
 
@@ -1752,8 +1762,12 @@
         downPaymentDeducted = true;
       }
 
-      let salarySelf = (currentAge < retireAge) ? Math.round(baseSalarySelf * Math.pow(1.02, yr)) : (parseFloat(document.getElementById('pension')?.value) || 44083);
-      let salarySpouse = (isDoubleMode && currentAge >= marryAge && currentAge < retireAge) ? Math.round(baseSalarySpouse * Math.pow(1.02, currentAge - marryAge)) : 0;
+      let salarySelf = (currentAge < retireAge) ? Math.round(baseSalarySelf * Math.pow(1.02, yr)) : (parseFloat(document.getElementById('pensionSelf')?.value) || 44083);
+      let salarySpouse = 0;
+      if (isDoubleMode && currentAge >= marryAge) {
+        const baseSpouse = parseFloat(document.getElementById('baseSalarySpouse')?.value) || 0;
+        salarySpouse = (currentAge < retireAge) ? Math.round(baseSpouse * Math.pow(1.02, currentAge - marryAge)) : (parseFloat(document.getElementById('pensionSpouse')?.value) || 30000);
+      }
 
       let bonusSelf = 0;
       if (currentAge < retireAge) {
